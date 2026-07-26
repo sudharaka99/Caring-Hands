@@ -2,48 +2,60 @@
      HEADER / NAVBAR
 ========================================== -->
 
-<header>
+<header class="site-header">
+
     <div class="container">
 
         <nav class="navbar">
 
             <!-- Logo -->
-            <a href="{{ route('home') }}" class="logo">
-                <img src="{{ asset('images/logo.png') }}"
-                     alt="Caring Hands Logo"
-                     class="logo-image">
+            <a href="{{ route('home') }}"
+               class="logo">
+
+                <img
+                    src="{{ asset('images/logo.png') }}"
+                    alt="Caring Hands Logo"
+                    class="logo-image"
+                >
+
             </a>
 
 
             <!-- Navigation -->
-            <ul class="nav-menu" id="navMenu">
+            <ul class="nav-menu"
+                id="navMenu">
 
                 <li>
-                    <a href="{{ route('home') }}">
+                    <a href="{{ route('home') }}"
+                       class="{{ request()->routeIs('home') ? 'active' : '' }}">
                         Home
                     </a>
                 </li>
 
                 <li>
-                    <a href="{{ route('about') }}">
+                    <a href="{{ route('about') }}"
+                       class="{{ request()->routeIs('about') ? 'active' : '' }}">
                         About
                     </a>
                 </li>
 
                 <li>
-                    <a href="{{ route('services') }}">
+                    <a href="{{ route('services') }}"
+                       class="{{ request()->routeIs('services') ? 'active' : '' }}">
                         Services
                     </a>
                 </li>
 
                 <li>
-                    <a href="{{ route('features') }}">
+                    <a href="{{ route('features') }}"
+                       class="{{ request()->routeIs('features') ? 'active' : '' }}">
                         Features
                     </a>
                 </li>
 
                 <li>
-                    <a href="{{ route('contact') }}">
+                    <a href="{{ route('contact') }}"
+                       class="{{ request()->routeIs('contact') ? 'active' : '' }}">
                         Contact
                     </a>
                 </li>
@@ -58,11 +70,11 @@
 
                     @php
                         $dashboardRoute = match (auth()->user()->role) {
-                            'admin'     => 'admin.dashboard',
-                            'manager'   => 'manager.dashboard',
-                            'caregiver' => 'caregiver.dashboard',
-                            'healthcare'=> 'healthcare.dashboard',
-                            default     => 'home',
+                            'admin'      => 'admin.dashboard',
+                            'manager'    => 'manager.dashboard',
+                            'caregiver'  => 'caregiver.dashboard',
+                            'healthcare' => 'healthcare.dashboard',
+                            default      => 'home',
                         };
                     @endphp
 
@@ -78,7 +90,6 @@
 
                 @else
 
-                    <!-- Login -->
                     <a href="{{ route('login') }}"
                        class="btn btn-outline">
 
@@ -89,7 +100,6 @@
                     </a>
 
 
-                    <!-- Register -->
                     <a href="{{ route('register') }}"
                        class="btn btn-primary">
 
@@ -103,10 +113,13 @@
 
 
             <!-- Mobile Menu -->
-            <button type="button"
-                    class="menu-toggle"
-                    onclick="toggleMenu()"
-                    aria-label="Toggle navigation">
+            <button
+                type="button"
+                class="menu-toggle"
+                onclick="toggleMenu()"
+                aria-label="Toggle navigation"
+                aria-controls="navMenu"
+            >
 
                 <i class="fa-solid fa-bars"></i>
 
@@ -115,4 +128,5 @@
         </nav>
 
     </div>
+
 </header>

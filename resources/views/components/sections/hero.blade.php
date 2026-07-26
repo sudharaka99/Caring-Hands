@@ -1,12 +1,17 @@
 <!-- ==========================================
      HERO SECTION
 ========================================== -->
+
 <section class="hero" id="home">
+
     <div class="container">
 
         <div class="hero-wrapper">
 
-            <!-- Hero Content -->
+            <!-- ==================================
+                 LEFT CONTENT
+            =================================== -->
+
             <div class="hero-content">
 
                 <div class="hero-badge">
@@ -14,10 +19,12 @@
                     We Care Your Hearts
                 </div>
 
+
                 <h1>
                     Compassionate Care,
                     <span>Connected by Technology</span>
                 </h1>
+
 
                 <p>
                     Caring Hands brings elderly residents,
@@ -26,25 +33,50 @@
                     easy-to-use elder home management platform.
                 </p>
 
+
                 <div class="hero-buttons">
 
-                    @guest
-                        <button class="btn btn-primary"
-                                onclick="openLogin()">
-                            Get Started
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </button>
-                    @else
-                        <a href="{{ route('dashboard') }}"
-                           class="btn btn-primary">
-                            Dashboard
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </a>
-                    @endguest
+                    @auth
 
-                    <a href="#about"
+                        @php
+                            $dashboardRoute = match (auth()->user()->role) {
+                                'admin'      => 'admin.dashboard',
+                                'manager'    => 'manager.dashboard',
+                                'caregiver'  => 'caregiver.dashboard',
+                                'healthcare' => 'healthcare.dashboard',
+                                default      => 'home',
+                            };
+                        @endphp
+
+
+                        <a href="{{ route($dashboardRoute) }}"
+                           class="btn btn-primary">
+
+                            Dashboard
+
+                            <i class="fa-solid fa-arrow-right"></i>
+
+                        </a>
+
+                    @else
+
+                        <a href="{{ route('register') }}"
+                           class="btn btn-primary">
+
+                            Get Started
+
+                            <i class="fa-solid fa-arrow-right"></i>
+
+                        </a>
+
+                    @endauth
+
+
+                    <a href="{{ route('about') }}"
                        class="btn btn-outline">
+
                         Learn More
+
                     </a>
 
                 </div>
@@ -52,25 +84,41 @@
             </div>
 
 
-            <!-- Hero Elder Banner Image -->
+            <!-- ==================================
+                 RIGHT BANNER IMAGE
+            =================================== -->
+
             <div class="hero-visual">
 
                 <div class="hero-image-wrapper">
 
-                    <img src="{{ asset('images/elder-banner.png') }}"
-                         alt="Happy elderly residents at Caring Hands"
-                         class="hero-banner-image">
+                    <img
+                        src="{{ asset('images/elder-banner.png') }}"
+                        alt="Caring Hands elder care"
+                        class="hero-banner-image"
+                    >
 
-                    <!-- Floating Info Card -->
+
+                    <!-- Floating Card -->
                     <div class="hero-floating-card">
 
                         <div class="hero-floating-icon">
+
                             <i class="fa-solid fa-heart"></i>
+
                         </div>
 
-                        <div>
-                            <strong>Better Care Starts Here</strong>
-                            <span>Compassionate care every day</span>
+
+                        <div class="hero-floating-content">
+
+                            <strong>
+                                Better Care Starts Here
+                            </strong>
+
+                            <span>
+                                Compassionate care every day
+                            </span>
+
                         </div>
 
                     </div>
@@ -82,4 +130,5 @@
         </div>
 
     </div>
+
 </section>
