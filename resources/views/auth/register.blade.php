@@ -1,60 +1,348 @@
-<x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
+@extends('layouts.app')
 
-        <x-validation-errors class="mb-4" />
+@section('title', 'Register | Caring Hands')
 
-        <form method="POST" action="{{ route('register') }}">
-            @csrf
+@section('content')
 
-            <div>
-                <x-label for="name" value="{{ __('Name') }}" />
-                <x-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            </div>
+<section class="auth-section">
 
-            <div class="mt-4">
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            </div>
+    <div class="auth-container">
 
-            <div class="mt-4">
-                <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            </div>
+        <!-- Left Side -->
+        <div class="auth-info">
 
-            <div class="mt-4">
-                <x-label for="password_confirmation" value="{{ __('Confirm Password') }}" />
-                <x-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
-            </div>
+            <a href="{{ route('home') }}" class="auth-logo">
+                <img src="{{ asset('images/logo.png') }}"
+                     alt="Caring Hands Logo">
+            </a>
 
-            @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
-                <div class="mt-4">
-                    <x-label for="terms">
-                        <div class="flex items-center">
-                            <x-checkbox name="terms" id="terms" required />
+            <div class="auth-info-content">
 
-                            <div class="ml-2">
-                                {!! __('I agree to the :terms_of_service and :privacy_policy', [
-                                        'terms_of_service' => '<a target="_blank" href="'.route('terms.show').'" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">'.__('Terms of Service').'</a>',
-                                        'privacy_policy' => '<a target="_blank" href="'.route('policy.show').'" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">'.__('Privacy Policy').'</a>',
-                                ]) !!}
-                            </div>
+                <span class="auth-badge">
+                    <i class="fa-solid fa-hands-holding-heart"></i>
+                    Join Caring Hands
+                </span>
+
+                <h1>
+                    Together for
+                    <span>better elder care.</span>
+                </h1>
+
+                <p>
+                    Create your Caring Hands account and stay
+                    connected with the people and care services
+                    that matter.
+                </p>
+
+
+                <div class="auth-features">
+
+                    <div class="auth-feature">
+
+                        <i class="fa-solid fa-user-shield"></i>
+
+                        <div>
+                            <strong>Secure Account</strong>
+                            <span>Your personal information stays protected.</span>
                         </div>
-                    </x-label>
+
+                    </div>
+
+
+                    <div class="auth-feature">
+
+                        <i class="fa-solid fa-notes-medical"></i>
+
+                        <div>
+                            <strong>Care Information</strong>
+                            <span>Access relevant care information easily.</span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="auth-feature">
+
+                        <i class="fa-solid fa-comments"></i>
+
+                        <div>
+                            <strong>Connected Care</strong>
+                            <span>Better communication through one platform.</span>
+                        </div>
+
+                    </div>
+
                 </div>
-            @endif
 
-            <div class="flex items-center justify-end mt-4">
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                    {{ __('Already registered?') }}
-                </a>
-
-                <x-button class="ml-4">
-                    {{ __('Register') }}
-                </x-button>
             </div>
-        </form>
-    </x-authentication-card>
-</x-guest-layout>
+
+        </div>
+
+
+        <!-- Right -->
+        <div class="auth-form-side">
+
+            <div class="auth-form-box">
+
+                <div class="auth-form-header">
+
+                    <div class="auth-form-icon">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+
+                    <h2>Create Account</h2>
+
+                    <p>
+                        Enter your information to get started.
+                    </p>
+
+                </div>
+
+
+                <form
+                    method="POST"
+                    action="{{ route('register') }}"
+                >
+
+                    @csrf
+
+
+                    <!-- Name -->
+                    <div class="auth-form-group">
+
+                        <label for="name">
+                            Full Name
+                        </label>
+
+                        <div class="auth-input-wrapper">
+
+                            <i class="fa-regular fa-user"></i>
+
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                value="{{ old('name') }}"
+                                placeholder="Enter your full name"
+                                autocomplete="name"
+                                required
+                                autofocus
+                                class="@error('name') input-error @enderror"
+                            >
+
+                        </div>
+
+                        @error('name')
+                            <span class="auth-error">
+                                {{ $message }}
+                            </span>
+                        @enderror
+
+                    </div>
+
+
+                    <!-- Email -->
+                    <div class="auth-form-group">
+
+                        <label for="email">
+                            Email Address
+                        </label>
+
+                        <div class="auth-input-wrapper">
+
+                            <i class="fa-regular fa-envelope"></i>
+
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value="{{ old('email') }}"
+                                placeholder="Enter your email"
+                                autocomplete="email"
+                                required
+                                class="@error('email') input-error @enderror"
+                            >
+
+                        </div>
+
+                        @error('email')
+                            <span class="auth-error">
+                                {{ $message }}
+                            </span>
+                        @enderror
+
+                    </div>
+
+
+                    <!-- Password -->
+                    <div class="auth-form-group">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <div class="auth-input-wrapper">
+
+                            <i class="fa-solid fa-lock"></i>
+
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Create a password"
+                                autocomplete="new-password"
+                                required
+                                class="@error('password') input-error @enderror"
+                            >
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                onclick="togglePassword('password', this)"
+                                aria-label="Show or hide password"
+                            >
+
+                                <i class="fa-regular fa-eye"></i>
+
+                            </button>
+
+                        </div>
+
+                        @error('password')
+                            <span class="auth-error">
+                                {{ $message }}
+                            </span>
+                        @enderror
+
+                    </div>
+
+
+                    <!-- Confirm Password -->
+                    <div class="auth-form-group">
+
+                        <label for="password_confirmation">
+                            Confirm Password
+                        </label>
+
+                        <div class="auth-input-wrapper">
+
+                            <i class="fa-solid fa-lock"></i>
+
+                            <input
+                                type="password"
+                                id="password_confirmation"
+                                name="password_confirmation"
+                                placeholder="Confirm your password"
+                                autocomplete="new-password"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                onclick="togglePassword('password_confirmation', this)"
+                                aria-label="Show or hide password"
+                            >
+
+                                <i class="fa-regular fa-eye"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Terms -->
+                    <div class="auth-options">
+
+                        <label class="remember-me">
+
+                            <input
+                                type="checkbox"
+                                name="terms"
+                                value="1"
+                                required
+                            >
+
+                            <span>
+                                I agree to the Terms & Conditions
+                                and Privacy Policy.
+                            </span>
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- Register -->
+                    <button
+                        type="submit"
+                        class="auth-submit-btn">
+
+                        Create Account
+
+                        <i class="fa-solid fa-arrow-right"></i>
+
+                    </button>
+
+
+                    <div class="auth-bottom-text">
+
+                        Already have an account?
+
+                        <a href="{{ route('login') }}">
+                            Login
+                        </a>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+@endsection
+
+
+@push('scripts')
+
+<script>
+
+    function togglePassword(inputId, button) {
+
+        const input =
+            document.getElementById(inputId);
+
+        const icon =
+            button.querySelector('i');
+
+
+        if (input.type === 'password') {
+
+            input.type = 'text';
+
+            icon.classList.remove('fa-eye');
+
+            icon.classList.add('fa-eye-slash');
+
+        } else {
+
+            input.type = 'password';
+
+            icon.classList.remove('fa-eye-slash');
+
+            icon.classList.add('fa-eye');
+
+        }
+
+    }
+
+</script>
+
+@endpush

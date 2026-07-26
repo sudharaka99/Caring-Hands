@@ -1,43 +1,118 @@
 <!-- ==========================================
      HEADER / NAVBAR
-     ========================================== -->
+========================================== -->
+
 <header>
     <div class="container">
+
         <nav class="navbar">
+
+            <!-- Logo -->
             <a href="{{ route('home') }}" class="logo">
                 <img src="{{ asset('images/logo.png') }}"
-                    alt="Caring Hands Logo"
-                    class="logo-image">
+                     alt="Caring Hands Logo"
+                     class="logo-image">
             </a>
 
+
+            <!-- Navigation -->
             <ul class="nav-menu" id="navMenu">
-                <li><a href="{{ route('home') }}">Home</a></li>
-                <li><a href="{{ route('about') }}">About</a></li>
-                <li><a href="{{ route('services') }}">Services</a></li>
-                <li><a href="{{ route('features') }}">Features</a></li>
-                <li><a href="{{ route('contact') }}">Contact</a></li>
+
+                <li>
+                    <a href="{{ route('home') }}">
+                        Home
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('about') }}">
+                        About
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('services') }}">
+                        Services
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('features') }}">
+                        Features
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('contact') }}">
+                        Contact
+                    </a>
+                </li>
+
             </ul>
 
+
+            <!-- Right Buttons -->
             <div class="nav-buttons">
+
                 @auth
-                    <a href="{{ route('dashboard') }}" class="btn btn-primary">
-                        <i class="fa-regular fa-user"></i>
+
+                    @php
+                        $dashboardRoute = match (auth()->user()->role) {
+                            'admin'     => 'admin.dashboard',
+                            'manager'   => 'manager.dashboard',
+                            'caregiver' => 'caregiver.dashboard',
+                            'healthcare'=> 'healthcare.dashboard',
+                            default     => 'home',
+                        };
+                    @endphp
+
+
+                    <a href="{{ route($dashboardRoute) }}"
+                       class="btn btn-primary">
+
+                        <i class="fa-solid fa-gauge-high"></i>
+
                         Dashboard
+
                     </a>
+
                 @else
-                    <button class="btn btn-outline" onclick="openLogin()">
+
+                    <!-- Login -->
+                    <a href="{{ route('login') }}"
+                       class="btn btn-outline">
+
                         <i class="fa-regular fa-user"></i>
+
                         Login
-                    </button>
-                    <a href="{{ route('register') }}" class="btn btn-primary">
-                        Get Started
+
                     </a>
+
+
+                    <!-- Register -->
+                    <a href="{{ route('register') }}"
+                       class="btn btn-primary">
+
+                        Get Started
+
+                    </a>
+
                 @endauth
+
             </div>
 
-            <button class="menu-toggle" onclick="toggleMenu()">
+
+            <!-- Mobile Menu -->
+            <button type="button"
+                    class="menu-toggle"
+                    onclick="toggleMenu()"
+                    aria-label="Toggle navigation">
+
                 <i class="fa-solid fa-bars"></i>
+
             </button>
+
         </nav>
+
     </div>
 </header>
