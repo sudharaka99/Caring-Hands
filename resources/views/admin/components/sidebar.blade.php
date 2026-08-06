@@ -31,7 +31,7 @@
         </a>
 
 
-        <a href="#"
+        <a href="{{ route('admin.elders.index') }}"
            class="sidebar-link">
 
             <i class="fa-solid fa-person-cane"></i>

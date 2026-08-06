@@ -36,7 +36,8 @@ Route::post('/register', [AccountController::class, 'store'])->name('register.st
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+
 
     Route::get('/manager/dashboard', [ManagerController::class, 'dashboard'])->name('manager.dashboard');
 
@@ -46,3 +47,27 @@ Route::middleware('auth')->group(function () {
 
 });   
 
+
+
+
+Route::prefix('admin')->middleware(['auth'])->group(function () {
+    
+    // Admin Dashboard
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    
+    // Elder Management Routes
+    Route::get('/elders', [AdminController::class, 'eldersIndex'])->name('admin.elders.index');
+    Route::get('/elders/create', [AdminController::class, 'eldersCreate'])->name('admin.elders.create');
+    Route::post('/elders', [AdminController::class, 'eldersStore'])->name('admin.elders.store');
+    Route::get('/elders/{elder}', [AdminController::class, 'eldersShow'])->name('admin.elders.show');
+    Route::get('/elders/{elder}/edit', [AdminController::class, 'eldersEdit'])->name('admin.elders.edit');
+    Route::put('/elders/{elder}', [AdminController::class, 'eldersUpdate'])->name('admin.elders.update');
+    Route::delete('/elders/{elder}', [AdminController::class, 'eldersDestroy'])->name('admin.elders.destroy');
+    
+    // AJAX Routes
+    Route::get('/elders/search', [AdminController::class, 'eldersSearch'])->name('admin.elders.search');
+    Route::post('/elders/{elder}/toggle-status', [AdminController::class, 'eldersToggleStatus'])->name('admin.elders.toggle-status');
+    Route::get('/elders/export', [AdminController::class, 'eldersExport'])->name('admin.elders.export');
+    Route::get('/dashboard/stats', [AdminController::class, 'dashboardStats'])->name('admin.dashboard.stats');
+    
+});

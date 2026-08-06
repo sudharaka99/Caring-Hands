@@ -1,0 +1,491 @@
+/* ==========================================
+   ELDER MANAGEMENT
+========================================== */
+
+.dashboard-heading{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:30px;
+    gap:20px;
+}
+
+.dashboard-subtitle{
+    color:#777;
+    margin-top:6px;
+}
+
+.dashboard-card{
+    background:#fff;
+    border-radius:18px;
+    padding:25px;
+    margin-bottom:25px;
+    box-shadow:0 10px 30px rgba(0,0,0,.05);
+}
+
+.card-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:20px;
+    color:#444;
+}
+
+.card-title i{
+    color:#FF9CA9;
+}
+
+/* ==========================================
+   FORM
+========================================== */
+
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:20px;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+}
+
+.full-width{
+    grid-column:1/-1;
+}
+
+.form-group label{
+    font-weight:600;
+    margin-bottom:8px;
+    color:#555;
+}
+
+.form-control{
+    width:100%;
+    height:48px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:0 15px;
+    font-size:15px;
+    transition:.3s;
+    background:#fff;
+}
+
+textarea.form-control{
+    height:120px;
+    resize:vertical;
+    padding:15px;
+}
+
+.form-control:focus{
+    border-color:#FF9CA9;
+    outline:none;
+    box-shadow:0 0 0 3px rgba(255,156,169,.15);
+}
+
+/* ==========================================
+   PHOTO
+========================================== */
+
+.photo-upload-wrapper{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:20px;
+}
+
+.photo-preview{
+    width:180px;
+    height:180px;
+    border-radius:50%;
+    object-fit:cover;
+    border:5px solid #FFE6EA;
+}
+
+input[type=file]{
+    display:none;
+}
+
+/* ==========================================
+   TABLE
+========================================== */
+
+.dashboard-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.dashboard-table th{
+    background:#FFF4F6;
+    color:#444;
+    padding:15px;
+    font-size:14px;
+    text-align:left;
+}
+
+.dashboard-table td{
+    padding:15px;
+    border-bottom:1px solid #eee;
+}
+
+.dashboard-table tr:hover{
+    background:#FFF9FA;
+}
+
+.table-avatar{
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    object-fit:cover;
+}
+
+/* ==========================================
+   STATUS
+========================================== */
+
+.status-badge{
+    display:inline-block;
+    padding:6px 15px;
+    border-radius:30px;
+    font-size:12px;
+    font-weight:600;
+}
+
+.status-badge.active{
+    background:#D9F7E7;
+    color:#1E8E5A;
+}
+
+.status-badge.inactive{
+    background:#FFE1E4;
+    color:#D9534F;
+}
+
+/* ==========================================
+   ACTION BUTTONS
+========================================== */
+
+.action-btn{
+    width:38px;
+    height:38px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    text-decoration:none;
+    margin-right:5px;
+    transition:.3s;
+}
+
+.action-btn.view{
+    background:#E7F3FF;
+    color:#2196F3;
+}
+
+.action-btn.edit{
+    background:#FFF3D6;
+    color:#FF9800;
+}
+
+.action-btn.delete{
+    background:#FFE4E7;
+    color:#F44336;
+    border:none;
+    cursor:pointer;
+}
+
+.action-btn:hover{
+    transform:translateY(-2px);
+}
+
+/* ==========================================
+   PROFILE
+========================================== */
+
+.profile-grid{
+    display:grid;
+    grid-template-columns:350px 1fr;
+    gap:25px;
+}
+
+.profile-card{
+    text-align:center;
+}
+
+.profile-image{
+    width:180px;
+    height:180px;
+    border-radius:50%;
+    object-fit:cover;
+    border:5px solid #FFE6EA;
+    margin-bottom:20px;
+}
+
+.profile-item{
+    display:flex;
+    justify-content:space-between;
+    padding:12px 0;
+    border-bottom:1px solid #eee;
+}
+
+.details-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.details-table th{
+    width:220px;
+    padding:14px;
+    text-align:left;
+    color:#666;
+    background:#FFF7F8;
+}
+
+.details-table td{
+    padding:14px;
+    border-bottom:1px solid #eee;
+}
+
+.mt-20{
+    margin-top:20px;
+}
+
+/* ==========================================
+   EMPTY
+========================================== */
+
+.empty-state{
+    padding:60px;
+    text-align:center;
+}
+
+.empty-state i{
+    font-size:70px;
+    color:#FF9CA9;
+    margin-bottom:20px;
+}
+
+.empty-state h4{
+    margin-bottom:10px;
+}
+
+.empty-state p{
+    color:#777;
+}
+
+/* ==========================================
+   SEARCH
+========================================== */
+
+.table-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.table-search{
+    position:relative;
+}
+
+.table-search input{
+    width:300px;
+    height:45px;
+    padding-left:45px;
+    border:1px solid #ddd;
+    border-radius:10px;
+}
+
+.table-search i{
+    position:absolute;
+    left:15px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#999;
+}
+
+.table-toolbar select{
+    height:45px;
+    padding:0 15px;
+    border-radius:10px;
+    border:1px solid #ddd;
+}
+
+/* ==========================================
+   BUTTONS
+========================================== */
+
+.form-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:15px;
+    margin-top:30px;
+}
+
+.btn{
+    padding:12px 28px;
+    border-radius:10px;
+    text-decoration:none;
+    font-weight:600;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.btn-primary{
+    background:#FF9CA9;
+    color:#fff;
+    border:none;
+}
+
+.btn-primary:hover{
+    background:#f67f91;
+}
+
+.btn-outline{
+    border:2px solid #FF9CA9;
+    color:#FF9CA9;
+    background:#fff;
+}
+
+.btn-outline:hover{
+    background:#FF9CA9;
+    color:#fff;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media(max-width:992px){
+
+.form-grid{
+grid-template-columns:1fr;
+}
+
+.profile-grid{
+grid-template-columns:1fr;
+}
+
+.table-toolbar{
+flex-direction:column;
+align-items:stretch;
+}
+
+.table-search input{
+width:100%;
+}
+
+.dashboard-heading{
+flex-direction:column;
+align-items:flex-start;
+}
+
+}
+
+@media(max-width:768px){
+
+.dashboard-table{
+display:block;
+overflow-x:auto;
+white-space:nowrap;
+}
+
+.photo-preview,
+.profile-image{
+width:140px;
+height:140px;
+}
+
+}
+
+/* ==========================================
+   STATS CARDS
+========================================== */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 25px;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.stat-icon.pink {
+    background: #FFE6EA;
+    color: #FF9CA9;
+}
+
+.stat-icon.teal {
+    background: #D9F7E7;
+    color: #1E8E5A;
+}
+
+.stat-icon.purple {
+    background: #E7E6FF;
+    color: #7C6FFF;
+}
+
+.stat-icon.orange {
+    background: #FFF3D6;
+    color: #FF9800;
+}
+
+.stat-info span {
+    color: #777;
+    font-size: 14px;
+}
+
+.stat-info h3 {
+    margin: 5px 0 0;
+    font-size: 28px;
+    color: #333;
+}
+
+/* ==========================================
+   TOOLBAR
+========================================== */
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* ==========================================
+   RESPONSIVE STATS
+========================================== */
+
+@media(max-width:992px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media(max-width:576px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
