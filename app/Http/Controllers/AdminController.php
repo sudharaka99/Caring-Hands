@@ -9,11 +9,6 @@ use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
-    /**
-     * Show the admin dashboard.
-     *
-     * @return \Illuminate\View\View
-     */
     public function dashboard()
     {
         $totalElders = DB::table('elders')->count();
@@ -34,11 +29,6 @@ class AdminController extends Controller
         ));
     }
 
-    /**
-     * Display a listing of the elders.
-     *
-     * @return \Illuminate\View\View
-     */
     public function eldersIndex()
     {
         $elders = DB::table('elders')
@@ -59,25 +49,13 @@ class AdminController extends Controller
         ));
     }
 
-    /**
-     * Show the form for creating a new elder.
-     *
-     * @return \Illuminate\View\View
-     */
     public function eldersCreate()
     {
         return view('admin.elders.create');
     }
 
-    /**
-     * Store a newly created elder in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function eldersStore(Request $request)
     {
-        // Validate the request
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'elder_code' => 'nullable|string|unique:elders,elder_code|max:50',
@@ -100,38 +78,30 @@ class AdminController extends Controller
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // Start transaction
         DB::beginTransaction();
 
         try {
-            // Handle photo upload
             if ($request->hasFile('photo')) {
                 $photoPath = $request->file('photo')->store('elder-photos', 'public');
                 $validated['photo'] = $photoPath;
             }
 
-            // Auto-generate elder code if not provided
             if (empty($validated['elder_code'])) {
                 $lastElder = DB::table('elders')->orderBy('id', 'desc')->first();
                 $nextId = $lastElder ? $lastElder->id + 1 : 1;
                 $validated['elder_code'] = 'ELD-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
             }
 
-            // Create the elder using DB::table
-            $id = DB::table('elders')->insertGetId($validated);
+            DB::table('elders')->insertGetId($validated);
 
-            // Commit transaction
             DB::commit();
 
             return redirect()
-                ->route('elders.index')
+                ->route('admin.elders.index')
                 ->with('success', 'Elder registered successfully! Elder Code: ' . $validated['elder_code']);
 
         } catch (\Exception $e) {
-            // Rollback transaction on error
             DB::rollBack();
-
-            // Log the error
             Log::error('Failed to create elder: ' . $e->getMessage());
 
             return redirect()
@@ -141,12 +111,6 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Display the specified elder.
-     *
-     * @param  int  $id
-     * @return \Illuminate\View\View
-     */
     public function eldersShow($id)
     {
         $elder = DB::table('elders')->where('id', $id)->first();
@@ -158,12 +122,6 @@ class AdminController extends Controller
         return view('admin.elders.show', compact('elder'));
     }
 
-    /**
-     * Show the form for editing the specified elder.
-     *
-     * @param  int  $id
-     * @return \Illuminate\View\View
-     */
     public function eldersEdit($id)
     {
         $elder = DB::table('elders')->where('id', $id)->first();
@@ -175,16 +133,8 @@ class AdminController extends Controller
         return view('admin.elders.edit', compact('elder'));
     }
 
-    /**
-     * Update the specified elder in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function eldersUpdate(Request $request, $id)
     {
-        // Validate the request
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'elder_code' => 'nullable|string|unique:elders,elder_code,' . $id . '|max:50',
@@ -207,20 +157,16 @@ class AdminController extends Controller
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // Start transaction
         DB::beginTransaction();
 
         try {
-            // Check if elder exists
             $elder = DB::table('elders')->where('id', $id)->first();
             
             if (!$elder) {
                 throw new \Exception('Elder not found');
             }
 
-            // Handle photo upload
             if ($request->hasFile('photo')) {
-                // Delete old photo if exists
                 if ($elder->photo && Storage::disk('public')->exists($elder->photo)) {
                     Storage::disk('public')->delete($elder->photo);
                 }
@@ -229,21 +175,16 @@ class AdminController extends Controller
                 $validated['photo'] = $photoPath;
             }
 
-            // Update the elder using DB::table
             DB::table('elders')->where('id', $id)->update($validated);
 
-            // Commit transaction
             DB::commit();
 
             return redirect()
-                ->route('elders.index')
+                ->route('admin.elders.index')
                 ->with('success', 'Elder updated successfully!');
 
         } catch (\Exception $e) {
-            // Rollback transaction on error
             DB::rollBack();
-
-            // Log the error
             Log::error('Failed to update elder: ' . $e->getMessage());
 
             return redirect()
@@ -253,45 +194,31 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Remove the specified elder from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function eldersDestroy($id)
     {
-        // Start transaction
         DB::beginTransaction();
 
         try {
-            // Check if elder exists
             $elder = DB::table('elders')->where('id', $id)->first();
             
             if (!$elder) {
                 throw new \Exception('Elder not found');
             }
 
-            // Delete photo if exists
             if ($elder->photo && Storage::disk('public')->exists($elder->photo)) {
                 Storage::disk('public')->delete($elder->photo);
             }
 
-            // Delete the elder using DB::table
             DB::table('elders')->where('id', $id)->delete();
 
-            // Commit transaction
             DB::commit();
 
             return redirect()
-                ->route('elders.index')
+                ->route('admin.elders.index')
                 ->with('success', 'Elder deleted successfully!');
 
         } catch (\Exception $e) {
-            // Rollback transaction on error
             DB::rollBack();
-
-            // Log the error
             Log::error('Failed to delete elder: ' . $e->getMessage());
 
             return redirect()
@@ -300,12 +227,6 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Search elders by name or code (AJAX).
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function eldersSearch(Request $request)
     {
         $query = $request->get('q');
@@ -316,16 +237,12 @@ class AdminController extends Controller
             ->limit(10)
             ->get(['id', 'name', 'elder_code', 'photo']);
 
-        return response()->json($elders);
+        return response()->json([
+            'status' => 'success',
+            'data' => $elders
+        ]);
     }
 
-    /**
-     * Update elder status (AJAX).
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function eldersToggleStatus(Request $request, $id)
     {
         try {
@@ -333,7 +250,7 @@ class AdminController extends Controller
             
             if (!$elder) {
                 return response()->json([
-                    'success' => false,
+                    'status' => 'error',
                     'message' => 'Elder not found.'
                 ], 404);
             }
@@ -345,24 +262,21 @@ class AdminController extends Controller
                 ->update(['status' => $newStatus]);
 
             return response()->json([
-                'success' => true,
-                'status' => $newStatus,
-                'message' => 'Status updated successfully!'
+                'status' => 'success',
+                'message' => 'Status updated successfully!',
+                'data' => [
+                    'status' => $newStatus
+                ]
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
+                'status' => 'error',
                 'message' => 'Failed to update status.'
             ], 500);
         }
     }
 
-    /**
-     * Export elders to CSV.
-     *
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse
-     */
     public function eldersExport()
     {
         $elders = DB::table('elders')->get();
@@ -375,14 +289,12 @@ class AdminController extends Controller
         $callback = function() use ($elders) {
             $file = fopen('php://output', 'w');
             
-            // Add headers
             fputcsv($file, [
                 'ID', 'Name', 'Elder Code', 'NIC', 'Age', 'Gender', 
                 'Blood Group', 'Phone', 'Email', 'Room', 'Caregiver', 
                 'Status', 'Admission Date'
             ]);
 
-            // Add data
             foreach ($elders as $elder) {
                 fputcsv($file, [
                     $elder->id,
@@ -407,11 +319,6 @@ class AdminController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    /**
-     * Get dashboard statistics (AJAX).
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function dashboardStats()
     {
         $stats = [
@@ -425,6 +332,9 @@ class AdminController extends Controller
                 ->count(),
         ];
 
-        return response()->json($stats);
+        return response()->json([
+            'status' => 'success',
+            'data' => $stats
+        ]);
     }
 }

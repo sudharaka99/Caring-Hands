@@ -254,8 +254,9 @@
 
                             </a>
 
-                            <button class="action-btn delete"
-                                    onclick="confirmDelete({{ $elder->id }})">
+                            <button type="button"
+                                    class="action-btn delete"
+                                    onclick="confirmElderDelete({{ $elder->id }})">
 
                                 <i class="fa-solid fa-trash"></i>
 
@@ -306,27 +307,49 @@
 
 @push('scripts')
 <script>
-function confirmDelete(id) {
-    if (confirm('Are you sure you want to delete this elder?')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{{ route("admin.elders.destroy", "") }}/' + id;
-        
-        const csrf = document.createElement('input');
-        csrf.type = 'hidden';
-        csrf.name = '_token';
-        csrf.value = '{{ csrf_token() }}';
-        form.appendChild(csrf);
-        
-        const method = document.createElement('input');
-        method.type = 'hidden';
-        method.name = '_method';
-        method.value = 'DELETE';
-        form.appendChild(method);
-        
-        document.body.appendChild(form);
-        form.submit();
+function submitDeleteForm(id) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ route("admin.elders.destroy", "") }}/' + id;
+
+    const csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = '_token';
+    csrf.value = '{{ csrf_token() }}';
+    form.appendChild(csrf);
+
+    const method = document.createElement('input');
+    method.type = 'hidden';
+    method.name = '_method';
+    method.value = 'DELETE';
+    form.appendChild(method);
+
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function confirmElderDelete(id) {
+    if (typeof Swal === 'undefined' || typeof Swal.fire !== 'function') {
+        if (confirm('Are you sure you want to delete this elder?')) {
+            submitDeleteForm(id);
+        }
+        return;
     }
+
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'Delete this elder? This cannot be undone!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitDeleteForm(id);
+        }
+    });
 }
 
 // Search and filter functionality
