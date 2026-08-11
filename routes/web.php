@@ -70,4 +70,16 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::get('/elders/export', [AdminController::class, 'eldersExport'])->name('admin.elders.export');
     Route::get('/dashboard/stats', [AdminController::class, 'dashboardStats'])->name('admin.dashboard.stats');
     
+    // ==========================================
+    // OWNER MANAGEMENT ROUTES
+    // ==========================================
+    
+    Route::get('/owners', [AdminController::class, 'ownersIndex'])->name('admin.owners.index');
+    Route::get('/owners/create', [AdminController::class, 'ownersCreate'])->name('admin.owners.create');
+    Route::post('/owners', [AdminController::class, 'ownersStore'])->name('admin.owners.store');
+    Route::get('/owners/{owner}', [AdminController::class, 'ownersShow'])->name('admin.owners.show');
+    Route::get('/owners/{owner}/edit', [AdminController::class, 'ownersEdit'])->name('admin.owners.edit');
+    Route::put('/owners/{owner}', [AdminController::class, 'ownersUpdate'])->name('admin.owners.update');
+    Route::delete('/owners/{owner}', [AdminController::class, 'ownersDestroy'])->name('admin.owners.destroy');
+    
 });

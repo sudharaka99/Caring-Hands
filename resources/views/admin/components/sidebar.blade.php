@@ -41,7 +41,7 @@
         </a>
 
 
-        <a href="#"
+        <a href="{{ route('admin.owners.index') }}"
            class="sidebar-link">
 
             <i class="fa-solid fa-users"></i>

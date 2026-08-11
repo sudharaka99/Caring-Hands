@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
+    // ==========================================
+    // DASHBOARD
+    // ==========================================
+
     public function dashboard()
     {
         $totalElders = DB::table('elders')->count();
@@ -29,11 +33,30 @@ class AdminController extends Controller
         ));
     }
 
-    public function eldersIndex()
+    // ==========================================
+    // ELDER MANAGEMENT
+    // ==========================================
+
+    public function eldersIndex(Request $request)
     {
-        $elders = DB::table('elders')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $query = DB::table('elders');
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('elder_code', 'LIKE', "%{$search}%")
+                  ->orWhere('phone', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $elders = $query->orderBy('created_at', 'desc')->paginate(10);
         
         $totalElders = DB::table('elders')->count();
         $activeElders = DB::table('elders')->where('status', 'active')->count();
@@ -336,5 +359,260 @@ class AdminController extends Controller
             'status' => 'success',
             'data' => $stats
         ]);
+    }
+
+    // ==========================================
+    // OWNER MANAGEMENT
+    // ==========================================
+
+    public function ownersIndex(Request $request)
+    {
+        $query = DB::table('owners');
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('nic', 'LIKE', "%{$search}%")
+                  ->orWhere('phone', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $owners = $query->orderBy('created_at', 'desc')->paginate(10);
+
+        // Get stats
+        $totalOwners = DB::table('owners')->count();
+        $activeOwners = DB::table('owners')->where('status', 'active')->count();
+        $guardianCount = DB::table('owners')->where('relationship', 'guardian')->count();
+
+        // Count linked owners (owners with at least one elder)
+        $linkedOwners = DB::table('elder_owner')
+            ->distinct('owner_id')
+            ->count('owner_id');
+
+        // Load elders for each owner
+        foreach ($owners as $owner) {
+            $owner->elders = DB::table('elder_owner')
+                ->join('elders', 'elder_owner.elder_id', '=', 'elders.id')
+                ->where('elder_owner.owner_id', $owner->id)
+                ->select('elders.*')
+                ->get();
+        }
+
+        return view('admin.owners.index', compact(
+            'owners',
+            'totalOwners',
+            'activeOwners',
+            'guardianCount',
+            'linkedOwners'
+        ));
+    }
+
+    public function ownersCreate()
+    {
+        $elders = DB::table('elders')->where('status', 'active')->get();
+        return view('admin.owners.create', compact('elders'));
+    }
+
+    public function ownersStore(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'nic' => 'nullable|string|max:50|unique:owners,nic',
+            'phone' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string',
+            'relationship' => 'nullable|string|max:100',
+            'status' => 'required|in:active,inactive',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'elder_ids' => 'nullable|array',
+            'elder_ids.*' => 'exists:elders,id',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            if ($request->hasFile('photo')) {
+                $photoPath = $request->file('photo')->store('owner-photos', 'public');
+                $validated['photo'] = $photoPath;
+            }
+
+            $ownerId = DB::table('owners')->insertGetId($validated);
+
+            // Attach elders
+            if ($request->filled('elder_ids')) {
+                foreach ($request->elder_ids as $elderId) {
+                    DB::table('elder_owner')->insert([
+                        'elder_id' => $elderId,
+                        'owner_id' => $ownerId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.owners.index')
+                ->with('success', 'Owner added successfully!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to create owner: ' . $e->getMessage());
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Failed to add owner. Please try again.');
+        }
+    }
+
+    public function ownersShow($id)
+    {
+        $owner = DB::table('owners')->where('id', $id)->first();
+        
+        if (!$owner) {
+            abort(404, 'Owner not found');
+        }
+
+        // Get owner's elders
+        $owner->elders = DB::table('elder_owner')
+            ->join('elders', 'elder_owner.elder_id', '=', 'elders.id')
+            ->where('elder_owner.owner_id', $id)
+            ->select('elders.*')
+            ->get();
+
+        return view('admin.owners.show', compact('owner'));
+    }
+
+    public function ownersEdit($id)
+    {
+        $owner = DB::table('owners')->where('id', $id)->first();
+        
+        if (!$owner) {
+            abort(404, 'Owner not found');
+        }
+
+        // Get owner's elder IDs
+        $ownerElderIds = DB::table('elder_owner')
+            ->where('owner_id', $id)
+            ->pluck('elder_id')
+            ->toArray();
+
+        $owner->elder_ids = $ownerElderIds;
+
+        $elders = DB::table('elders')->where('status', 'active')->get();
+
+        return view('admin.owners.edit', compact('owner', 'elders'));
+    }
+
+    public function ownersUpdate(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'nic' => 'nullable|string|max:50|unique:owners,nic,' . $id,
+            'phone' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string',
+            'relationship' => 'nullable|string|max:100',
+            'status' => 'required|in:active,inactive',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'elder_ids' => 'nullable|array',
+            'elder_ids.*' => 'exists:elders,id',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $owner = DB::table('owners')->where('id', $id)->first();
+            
+            if (!$owner) {
+                throw new \Exception('Owner not found');
+            }
+
+            if ($request->hasFile('photo')) {
+                if ($owner->photo && Storage::disk('public')->exists($owner->photo)) {
+                    Storage::disk('public')->delete($owner->photo);
+                }
+                $photoPath = $request->file('photo')->store('owner-photos', 'public');
+                $validated['photo'] = $photoPath;
+            }
+
+            DB::table('owners')->where('id', $id)->update($validated);
+
+            // Sync elders - delete existing and insert new
+            DB::table('elder_owner')->where('owner_id', $id)->delete();
+
+            if ($request->filled('elder_ids')) {
+                foreach ($request->elder_ids as $elderId) {
+                    DB::table('elder_owner')->insert([
+                        'elder_id' => $elderId,
+                        'owner_id' => $id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.owners.index')
+                ->with('success', 'Owner updated successfully!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update owner: ' . $e->getMessage());
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Failed to update owner. Please try again.');
+        }
+    }
+
+    public function ownersDestroy($id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $owner = DB::table('owners')->where('id', $id)->first();
+            
+            if (!$owner) {
+                throw new \Exception('Owner not found');
+            }
+
+            if ($owner->photo && Storage::disk('public')->exists($owner->photo)) {
+                Storage::disk('public')->delete($owner->photo);
+            }
+
+            // Delete relationships
+            DB::table('elder_owner')->where('owner_id', $id)->delete();
+
+            // Delete owner
+            DB::table('owners')->where('id', $id)->delete();
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.owners.index')
+                ->with('success', 'Owner deleted successfully!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to delete owner: ' . $e->getMessage());
+
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to delete owner. Please try again.');
+        }
     }
 }
