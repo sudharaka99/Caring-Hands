@@ -439,12 +439,25 @@ class AdminController extends Controller
         DB::beginTransaction();
 
         try {
+            // Prepare data
+            $data = [
+                'name' => $validated['name'],
+                'nic' => $validated['nic'] ?? null,
+                'phone' => $validated['phone'],
+                'email' => $validated['email'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'relationship' => $validated['relationship'] ?? null,
+                'status' => $validated['status'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
             if ($request->hasFile('photo')) {
                 $photoPath = $request->file('photo')->store('owner-photos', 'public');
-                $validated['photo'] = $photoPath;
+                $data['photo'] = $photoPath;
             }
 
-            $ownerId = DB::table('owners')->insertGetId($validated);
+            $ownerId = DB::table('owners')->insertGetId($data);
 
             // Attach elders
             if ($request->filled('elder_ids')) {
@@ -538,15 +551,27 @@ class AdminController extends Controller
                 throw new \Exception('Owner not found');
             }
 
+            // Prepare data
+            $data = [
+                'name' => $validated['name'],
+                'nic' => $validated['nic'] ?? null,
+                'phone' => $validated['phone'],
+                'email' => $validated['email'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'relationship' => $validated['relationship'] ?? null,
+                'status' => $validated['status'],
+                'updated_at' => now(),
+            ];
+
             if ($request->hasFile('photo')) {
                 if ($owner->photo && Storage::disk('public')->exists($owner->photo)) {
                     Storage::disk('public')->delete($owner->photo);
                 }
                 $photoPath = $request->file('photo')->store('owner-photos', 'public');
-                $validated['photo'] = $photoPath;
+                $data['photo'] = $photoPath;
             }
 
-            DB::table('owners')->where('id', $id)->update($validated);
+            DB::table('owners')->where('id', $id)->update($data);
 
             // Sync elders - delete existing and insert new
             DB::table('elder_owner')->where('owner_id', $id)->delete();

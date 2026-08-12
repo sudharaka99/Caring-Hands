@@ -16,7 +16,7 @@
             <h1>Edit Owner</h1>
 
             <p class="dashboard-subtitle">
-                Update owner information for {{ $owner->name }}.
+                Update owner information for {{ $owner->name ?? 'N/A' }}.
             </p>
 
         </div>
@@ -59,7 +59,7 @@
                 <img src="{{ $owner->photo ? asset('storage/' . $owner->photo) : asset('images/default-user.png') }}"
                      id="photoPreview"
                      class="photo-preview"
-                     alt="{{ $owner->name }}">
+                     alt="{{ $owner->name ?? 'N/A' }}">
 
                 <input type="file"
                        name="photo"
@@ -234,7 +234,7 @@
         </div>
 
         <!-- ==========================================
-             ELDER ASSIGNMENT
+             ELDER ASSIGNMENT WITH SEARCH
         ========================================== -->
 
         <div class="dashboard-card">
@@ -252,30 +252,89 @@
                 <label>Select Elders to Assign</label>
 
                 <p style="color:#777; font-size:14px; margin-bottom:10px;">
-                    Select one or more elders to link with this owner.
+                    Search and select one or more elders to link with this owner.
                 </p>
 
-                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px; max-height:300px; overflow-y:auto; padding:10px; border:1px solid #ddd; border-radius:10px;">
+                <!-- Search Box -->
+                <div style="margin-bottom:15px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+
+                    <div style="position:relative; flex:1; min-width:200px;">
+
+                        <i class="fa-solid fa-search" 
+                           style="position:absolute; left:15px; top:50%; transform:translateY(-50%); color:#999;"></i>
+
+                        <input type="text" 
+                               id="elderSearchInput" 
+                               class="form-control" 
+                               placeholder="Search by name, code, room..." 
+                               style="padding-left: 40px;">
+
+                    </div>
+
+                    <span id="searchCount" style="color:#999; font-size:13px; white-space:nowrap;">
+                        Showing: <span id="visibleCount">0</span> / <span id="totalCount">0</span> elders
+                    </span>
+
+                    <button type="button" 
+                            onclick="selectAllElders()" 
+                            class="btn btn-sm btn-primary" 
+                            style="padding: 8px 16px; font-size: 13px; background:#28a745;">
+
+                        <i class="fa-solid fa-check-double"></i> Select All
+
+                    </button>
+
+                    <button type="button" 
+                            onclick="deselectAllElders()" 
+                            class="btn btn-sm btn-outline" 
+                            style="padding: 8px 16px; font-size: 13px; border-color:#dc3545; color:#dc3545;">
+
+                        <i class="fa-solid fa-times"></i> Deselect All
+
+                    </button>
+
+                </div>
+
+                <!-- Elder List -->
+                <div id="elderListContainer" 
+                     style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px; max-height:350px; overflow-y:auto; padding:10px; border:1px solid #ddd; border-radius:10px; background:#fafafa;">
 
                     @forelse($elders ?? [] as $elder)
 
-                        <label style="display:flex; align-items:center; gap:10px; padding:8px; cursor:pointer; border-radius:8px; transition:background 0.3s;"
-                               onmouseover="this.style.background='#FFF4F6'"
-                               onmouseout="this.style.background='transparent'">
+                        <label class="elder-checkbox-item" 
+                               data-name="{{ strtolower($elder->name) }}"
+                               data-code="{{ strtolower($elder->elder_code ?? '') }}"
+                               data-room="{{ strtolower($elder->room ?? '') }}"
+                               style="display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:pointer; border-radius:8px; transition:background 0.3s; background:#fff; border:1px solid #eee;">
 
                             <input type="checkbox"
                                    name="elder_ids[]"
                                    value="{{ $elder->id }}"
-                                   {{ in_array($elder->id, old('elder_ids', $owner->elders->pluck('id')->toArray())) ? 'checked' : '' }}>
+                                   class="elder-checkbox"
+                                   {{ in_array($elder->id, old('elder_ids', $owner->elder_ids ?? [])) ? 'checked' : '' }}>
 
-                            <span>
-                                <strong>{{ $elder->name }}</strong>
-                                <br>
-                                <small style="color:#999;">Room: {{ $elder->room ?? 'N/A' }}</small>
-                            </span>
+                            <div style="flex:1; min-width:0;">
+
+                                <div style="font-weight:600; font-size:14px; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    {{ $elder->name }}
+                                </div>
+
+                                <div style="font-size:12px; color:#999; display:flex; gap:10px; flex-wrap:wrap;">
+
+                                    @if($elder->elder_code)
+                                        <span>Code: {{ $elder->elder_code }}</span>
+                                    @endif
+
+                                    @if($elder->room)
+                                        <span>Room: {{ $elder->room }}</span>
+                                    @endif
+
+                                </div>
+
+                            </div>
 
                             <span class="status-badge {{ $elder->status == 'active' ? 'active' : 'inactive' }}"
-                                  style="font-size:10px; padding:2px 10px; margin-left:auto;">
+                                  style="font-size:10px; padding:2px 10px; flex-shrink:0;">
                                 {{ ucfirst($elder->status ?? 'Active') }}
                             </span>
 
@@ -291,10 +350,24 @@
 
                 </div>
 
-                <small style="color:#999; font-size:12px; margin-top:10px; display:block;">
-                    <i class="fa-solid fa-info-circle"></i>
-                    Hold Ctrl/Cmd to select multiple elders.
-                </small>
+                <!-- No Results Message -->
+                <div id="noResults" style="display:none; text-align:center; padding:30px; color:#999;">
+                    <i class="fa-solid fa-search" style="font-size:30px; display:block; margin-bottom:10px;"></i>
+                    <p>No elders found matching your search.</p>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; flex-wrap:wrap; gap:10px;">
+
+                    <small style="color:#999; font-size:12px;">
+                        <i class="fa-solid fa-info-circle"></i>
+                        <span id="selectedCount">0</span> elder(s) selected
+                    </small>
+
+                    <small style="color:#999; font-size:12px;">
+                        Hold <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> to select multiple elders.
+                    </small>
+
+                </div>
 
                 @error('elder_ids')
                     <small style="color:red;">{{ $message }}</small>
@@ -337,6 +410,62 @@
 
 @endsection
 
+@push('styles')
+<style>
+    .elder-checkbox-item:hover {
+        background: #FFF4F6 !important;
+        border-color: #FF9CA9 !important;
+    }
+
+    .elder-checkbox-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #FF9CA9;
+        flex-shrink: 0;
+    }
+
+    .elder-checkbox-item:has(input:checked) {
+        background: #FFF4F6 !important;
+        border-color: #FF9CA9 !important;
+    }
+
+    #elderListContainer::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #elderListContainer::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    #elderListContainer::-webkit-scrollbar-thumb {
+        background: #ddd;
+        border-radius: 10px;
+    }
+
+    #elderListContainer::-webkit-scrollbar-thumb:hover {
+        background: #ccc;
+    }
+
+    kbd {
+        background: #f4f4f4;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #555;
+    }
+
+    .btn-sm {
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 8px;
+    }
+</style>
+@endpush
+
 @push('scripts')
 
 <script>
@@ -348,13 +477,123 @@
         reader.readAsDataURL(event.target.files[0]);
     }
 
+    // ==========================================
+    // ELDER SEARCH FUNCTION
+    // ==========================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('elderSearchInput');
+        const elderItems = document.querySelectorAll('.elder-checkbox-item');
+        const noResults = document.getElementById('noResults');
+        const visibleCount = document.getElementById('visibleCount');
+        const totalCount = document.getElementById('totalCount');
+        const selectedCount = document.getElementById('selectedCount');
+
+        // Update total count
+        if (totalCount) {
+            totalCount.textContent = elderItems.length;
+        }
+
+        function updateSelectedCount() {
+            const checked = document.querySelectorAll('.elder-checkbox:checked');
+            if (selectedCount) {
+                selectedCount.textContent = checked.length;
+            }
+        }
+
+        // Update selected count on checkbox change
+        document.querySelectorAll('.elder-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedCount);
+        });
+
+        // Initial selected count
+        updateSelectedCount();
+
+        // Search function
+        function filterElders() {
+            const query = searchInput.value.toLowerCase().trim();
+            let visible = 0;
+
+            elderItems.forEach(item => {
+                const name = item.dataset.name || '';
+                const code = item.dataset.code || '';
+                const room = item.dataset.room || '';
+
+                const matches = name.includes(query) || 
+                              code.includes(query) || 
+                              room.includes(query);
+
+                if (matches) {
+                    item.style.display = 'flex';
+                    visible++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Update counts
+            if (visibleCount) {
+                visibleCount.textContent = visible;
+            }
+
+            // Show/hide no results message
+            if (noResults) {
+                noResults.style.display = visible === 0 && elderItems.length > 0 ? 'block' : 'none';
+            }
+
+            // Update selected count
+            updateSelectedCount();
+        }
+
+        // Search on input
+        if (searchInput) {
+            searchInput.addEventListener('input', filterElders);
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Escape') {
+                    this.value = '';
+                    filterElders();
+                }
+            });
+        }
+
+        // Initial filter
+        filterElders();
+
+        // Select All function (only visible elders)
+        window.selectAllElders = function() {
+            const visibleCheckboxes = document.querySelectorAll('.elder-checkbox-item[style*="display: flex"] input[type="checkbox"], .elder-checkbox-item:not([style*="display: none"]) input[type="checkbox"]');
+            visibleCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            updateSelectedCount();
+        }
+
+        // Deselect All function
+        window.deselectAllElders = function() {
+            document.querySelectorAll('.elder-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateSelectedCount();
+        }
+
+        // Make functions globally available
+        window.selectAllElders = selectAllElders;
+        window.deselectAllElders = deselectAllElders;
+    });
+
+    // ==========================================
+    // FORM SUBMISSION
+    // ==========================================
+
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('ownerForm');
         const updateBtn = document.getElementById('updateBtn');
 
         form.addEventListener('submit', function(e) {
             if (form.checkValidity()) {
-                showLoading('Updating owner...');
+                if (typeof showLoading === 'function') {
+                    showLoading('Updating owner...');
+                }
                 updateBtn.disabled = true;
                 updateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...';
             }
@@ -364,6 +603,16 @@
             input.addEventListener('invalid', function() {
                 updateBtn.disabled = false;
                 updateBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update Owner';
+            });
+        });
+
+        // Restore button state if user cancels
+        document.querySelectorAll('.btn-outline').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (updateBtn.disabled) {
+                    updateBtn.disabled = false;
+                    updateBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update Owner';
+                }
             });
         });
     });
