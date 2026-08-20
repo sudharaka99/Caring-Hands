@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\MenuAccessController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,3 +85,10 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::delete('/owners/{owner}', [AdminController::class, 'ownersDestroy'])->name('admin.owners.destroy');
     
 });
+
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+        Route::resource('menus',MenuController::class );
+        Route::get('/menu-access',[MenuAccessController::class, 'index'])->name('menu-access.index');
+        Route::post('/menu-access',[MenuAccessController::class, 'update'])->name('menu-access.update');
+
+    });

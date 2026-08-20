@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use App\Models\Menu;
 
 class AdminController extends Controller
 {
@@ -15,21 +16,53 @@ class AdminController extends Controller
 
     public function dashboard()
     {
+        // ==========================================
+        // ELDER STATISTICS
+        // ==========================================
+
         $totalElders = DB::table('elders')->count();
-        $activeElders = DB::table('elders')->where('status', 'active')->count();
+
+        $activeElders = DB::table('elders')
+            ->where('status', 'active')
+            ->count();
+
         $newAdmissions = DB::table('elders')
             ->whereMonth('admission_date', now()->month)
             ->count();
+
         $recentElders = DB::table('elders')
             ->latest()
             ->limit(5)
             ->get();
 
+
+        // ==========================================
+        // MENU ACCESS
+        // ==========================================
+
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses','accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);})
+            ->orderBy('sort_order')
+            ->get();
+
+
+        // ==========================================
+        // RETURN VIEW
+        // ==========================================
+
         return view('admin.dashboard', compact(
             'totalElders',
             'activeElders',
             'newAdmissions',
-            'recentElders'
+            'recentElders',
+            'menus',
+            'userRole'
         ));
     }
 
@@ -63,12 +96,25 @@ class AdminController extends Controller
         $maleElders = DB::table('elders')->where('gender', 'male')->count();
         $femaleElders = DB::table('elders')->where('gender', 'female')->count();
 
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses','accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);})
+            ->orderBy('sort_order')
+            ->get();
+
         return view('admin.elders.index', compact(
             'elders',
             'totalElders',
             'activeElders',
             'maleElders',
-            'femaleElders'
+            'femaleElders',
+            'menus',
+            'userRole'
         ));
     }
 
@@ -406,12 +452,25 @@ class AdminController extends Controller
                 ->get();
         }
 
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses','accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);})
+            ->orderBy('sort_order')
+            ->get();
+
         return view('admin.owners.index', compact(
             'owners',
             'totalOwners',
             'activeOwners',
             'guardianCount',
-            'linkedOwners'
+            'linkedOwners',
+            'menus',
+            'userRole'
         ));
     }
 

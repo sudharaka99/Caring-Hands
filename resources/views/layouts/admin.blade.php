@@ -27,7 +27,7 @@
 <body class="admin-body">
 
     <!-- Sidebar -->
-    @include('admin.components.sidebar')
+    @include('sidebar')
 
     <div class="admin-main" id="adminMain">
 
