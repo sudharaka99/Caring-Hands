@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AccountController;
-use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\MenuAccessController;
 
@@ -87,8 +87,19 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
 });
 
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
-        Route::resource('menus',MenuController::class );
-        Route::get('/menu-access',[MenuAccessController::class, 'index'])->name('menu-access.index');
-        Route::post('/menu-access',[MenuAccessController::class, 'update'])->name('menu-access.update');
+    Route::resource('menus',MenuController::class );
+    Route::get('/menu-access',[MenuAccessController::class, 'index'])->name('menu-access.index');
+    Route::post('/menu-access',[MenuAccessController::class, 'update'])->name('menu-access.update');
 
-    });
+});
+
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    // Caregivers
+    Route::get('/caregivers', [AdminController::class, 'caregiversIndex'])->name('admin.caregivers.index');
+    Route::get('/caregivers/create',[AdminController::class, 'caregiversCreate'])->name('admin.caregivers.create');
+    Route::post('/caregivers',[AdminController::class, 'caregiversStore'])->name('admin.caregivers.store');
+    Route::get('/caregivers/{id}',[AdminController::class, 'caregiversShow'])->name('admin.caregivers.show');
+    Route::get('/caregivers/{id}/edit',[AdminController::class, 'caregiversEdit'])->name('admin.caregivers.edit');
+    Route::put('/caregivers/{id}',[AdminController::class, 'caregiversUpdate'])->name('admin.caregivers.update');
+    Route::delete('/caregivers/{id}',[AdminController::class, 'caregiversDestroy'])->name('admin.caregivers.destroy');
+});

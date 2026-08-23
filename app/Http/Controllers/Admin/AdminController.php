@@ -1,12 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
-
+namespace App\Http\Controllers\Admin;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\Menu;
+use App\Models\User;
+use App\Models\Caregiver;
+use Illuminate\Support\Facades\Hash;
+
 
 class AdminController extends Controller
 {
@@ -498,6 +502,8 @@ class AdminController extends Controller
         DB::beginTransaction();
 
         try {
+
+            
             // Prepare data
             $data = [
                 'name' => $validated['name'],
@@ -699,4 +705,464 @@ class AdminController extends Controller
                 ->with('error', 'Failed to delete owner. Please try again.');
         }
     }
+
+    // ==========================================
+    // CAREGIVER MANAGEMENT
+    // ==========================================
+
+    public function caregiversIndex(Request $request)
+    {
+        $query = Caregiver::with('user');
+
+        // Search
+        if ($request->filled('search')) {
+
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+
+                $q->where('staff_code', 'LIKE', "%{$search}%")
+                ->orWhere('nic', 'LIKE', "%{$search}%")
+                ->orWhere('phone', 'LIKE', "%{$search}%")
+
+                ->orWhereHas('user', function ($userQuery) use ($search) {
+
+                    $userQuery->where('name', 'LIKE', "%{$search}%")
+                                ->orWhere('email', 'LIKE', "%{$search}%");
+
+                });
+
+            });
+        }
+
+        // Status filter from users table
+        if ($request->filled('status')) {
+
+            $status = $request->status;
+
+            $query->whereHas('user', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+        $caregivers = $query
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+
+        // ==========================================
+        // STATISTICS
+        // ==========================================
+
+        $totalCaregivers = Caregiver::count();
+
+        $activeCaregivers = Caregiver::whereHas('user', function ($q) {
+            $q->where('status', 'active');
+        })->count();
+
+        $inactiveCaregivers = Caregiver::whereHas('user', function ($q) {
+            $q->where('status', 'inactive');
+        })->count();
+
+
+        // ==========================================
+        // MENU ACCESS
+        // ==========================================
+
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+        ->whereNull('parent_id')
+        ->where('status', 'active')
+        ->whereHas('accesses', function ($query) use ($userRole) {
+
+            $query->where('role', $userRole)
+                ->where('can_view', 1);
+
+        })
+        ->orderBy('sort_order')
+        ->get();
+
+
+        return view('admin.caregivers.index', compact(
+            'caregivers',
+            'totalCaregivers',
+            'activeCaregivers',
+            'inactiveCaregivers',
+            'menus',
+            'userRole'
+        ));
+    }
+
+    public function caregiversCreate()
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+        ->whereNull('parent_id')
+        ->where('status', 'active')
+        ->whereHas('accesses', function ($query) use ($userRole) {
+
+            $query->where('role', $userRole)
+                ->where('can_view', 1);
+
+        })
+        ->orderBy('sort_order')
+        ->get();
+
+
+        return view(
+            'admin.caregivers.create',
+            compact('menus', 'userRole')
+        );
+    }
+
+    public function caregiversStore(Request $request)
+    {
+        $request->validate([
+
+            // User
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
+            'status' => 'required|in:active,inactive',
+
+            // Caregiver
+            'staff_code' => 'nullable|string|max:50',
+            'nic' => 'nullable|string|max:20',
+            'date_of_birth' => 'nullable|date',
+            'gender' => 'nullable|in:male,female,other',
+            'phone' => 'nullable|string|max:30',
+            'address' => 'nullable|string',
+            'joining_date' => 'nullable|date',
+
+            'employment_type' =>
+                'nullable|in:full_time,part_time,contract,temporary',
+
+            'emergency_contact_name' => 'nullable|string|max:255',
+            'emergency_relationship' => 'nullable|string|max:100',
+            'emergency_phone' => 'nullable|string|max:30',
+
+            'qualifications' => 'nullable|string',
+            'experience' => 'nullable|string',
+            'notes' => 'nullable|string',
+        ]);
+
+
+        DB::transaction(function () use ($request) {
+
+            // ==========================================
+            // CREATE USER
+            // ==========================================
+
+            $user = User::create([
+
+                'name' => $request->name,
+
+                'email' => $request->email,
+
+                'password' => Hash::make($request->password),
+
+                'role' => 'caregiver',
+
+                'status' => $request->status,
+
+            ]);
+
+
+            // ==========================================
+            // CREATE CAREGIVER
+            // ==========================================
+
+            Caregiver::create([
+
+                'user_id' => $user->id,
+
+                'staff_code' => $request->staff_code,
+
+                'nic' => $request->nic,
+
+                'date_of_birth' => $request->date_of_birth,
+
+                'gender' => $request->gender,
+
+                'phone' => $request->phone,
+
+                'address' => $request->address,
+
+                'joining_date' => $request->joining_date,
+
+                'employment_type' =>
+                    $request->employment_type ?? 'full_time',
+
+                'emergency_contact_name' =>
+                    $request->emergency_contact_name,
+
+                'emergency_relationship' =>
+                    $request->emergency_relationship,
+
+                'emergency_phone' =>
+                    $request->emergency_phone,
+
+                'qualifications' =>
+                    $request->qualifications,
+
+                'experience' =>
+                    $request->experience,
+
+                'notes' =>
+                    $request->notes,
+
+            ]);
+
+        });
+
+
+        return redirect()
+            ->route('admin.caregivers.index')
+            ->with('success', 'Caregiver created successfully.');
+    }
+
+    public function caregiversShow($id)
+    {
+        $caregiver = Caregiver::with('user')
+            ->findOrFail($id);
+
+
+        // MENU ACCESS
+
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+        ->whereNull('parent_id')
+        ->where('status', 'active')
+        ->whereHas('accesses', function ($query) use ($userRole) {
+
+            $query->where('role', $userRole)
+                ->where('can_view', 1);
+
+        })
+        ->orderBy('sort_order')
+        ->get();
+
+
+        return view(
+            'admin.caregivers.show',
+            compact(
+                'caregiver',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function caregiversEdit($id)
+    {
+        $caregiver = Caregiver::with('user')
+            ->findOrFail($id);
+
+
+        // MENU ACCESS
+
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+        ->whereNull('parent_id')
+        ->where('status', 'active')
+        ->whereHas('accesses', function ($query) use ($userRole) {
+
+            $query->where('role', $userRole)
+                ->where('can_view', 1);
+
+        })
+        ->orderBy('sort_order')
+        ->get();
+
+
+        return view(
+            'admin.caregivers.edit',
+            compact(
+                'caregiver',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function caregiversUpdate(Request $request, $id)
+    {
+        $caregiver = Caregiver::with('user')
+            ->findOrFail($id);
+
+
+        $request->validate([
+
+            // User
+            'name' => 'required|string|max:255',
+
+            'email' => 'required|email|max:255|unique:users,email,' .
+                $caregiver->user_id,
+
+            'password' => 'nullable|string|min:6|confirmed',
+
+            'status' => 'required|in:active,inactive',
+
+
+            // Caregiver
+            'staff_code' => 'nullable|string|max:50',
+
+            'nic' => 'nullable|string|max:20',
+
+            'date_of_birth' => 'nullable|date',
+
+            'gender' => 'nullable|in:male,female,other',
+
+            'phone' => 'nullable|string|max:30',
+
+            'address' => 'nullable|string',
+
+            'joining_date' => 'nullable|date',
+
+            'employment_type' =>
+                'nullable|in:full_time,part_time,contract,temporary',
+
+            'emergency_contact_name' =>
+                'nullable|string|max:255',
+
+            'emergency_relationship' =>
+                'nullable|string|max:100',
+
+            'emergency_phone' =>
+                'nullable|string|max:30',
+
+            'qualifications' => 'nullable|string',
+
+            'experience' => 'nullable|string',
+
+            'notes' => 'nullable|string',
+
+        ]);
+
+
+        DB::transaction(function () use ($request, $caregiver) {
+
+            // ==========================================
+            // UPDATE USER
+            // ==========================================
+
+            $user = $caregiver->user;
+
+            $user->name = $request->name;
+
+            $user->email = $request->email;
+
+            $user->status = $request->status;
+
+
+            if ($request->filled('password')) {
+
+                $user->password =
+                    Hash::make($request->password);
+
+            }
+
+            $user->save();
+
+
+            // ==========================================
+            // UPDATE CAREGIVER
+            // ==========================================
+
+            $caregiver->staff_code =
+                $request->staff_code;
+
+            $caregiver->nic =
+                $request->nic;
+
+            $caregiver->date_of_birth =
+                $request->date_of_birth;
+
+            $caregiver->gender =
+                $request->gender;
+
+            $caregiver->phone =
+                $request->phone;
+
+            $caregiver->address =
+                $request->address;
+
+            $caregiver->joining_date =
+                $request->joining_date;
+
+            $caregiver->employment_type =
+                $request->employment_type;
+
+            $caregiver->emergency_contact_name =
+                $request->emergency_contact_name;
+
+            $caregiver->emergency_relationship =
+                $request->emergency_relationship;
+
+            $caregiver->emergency_phone =
+                $request->emergency_phone;
+
+            $caregiver->qualifications =
+                $request->qualifications;
+
+            $caregiver->experience =
+                $request->experience;
+
+            $caregiver->notes =
+                $request->notes;
+
+            $caregiver->save();
+
+        });
+
+
+        return redirect()
+            ->route('admin.caregivers.index')
+            ->with('success', 'Caregiver updated successfully.');
+    }
+
+    public function caregiversDestroy($id)
+    {
+        $caregiver = Caregiver::findOrFail($id);
+
+        DB::transaction(function () use ($caregiver) {
+
+            // Get linked user
+            $user = $caregiver->user;
+
+            // Delete caregiver profile
+            $caregiver->delete();
+
+            // Delete caregiver login account
+            if ($user) {
+                $user->delete();
+            }
+
+        });
+
+
+        return redirect()
+            ->route('admin.caregivers.index')
+            ->with('success', 'Caregiver deleted successfully.');
+    }
+
+
+
 }
