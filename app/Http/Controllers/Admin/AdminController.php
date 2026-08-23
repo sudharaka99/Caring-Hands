@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Menu;
 use App\Models\User;
 use App\Models\Caregiver;
+use App\Models\Elder;
+use App\Models\Owner;
 use Illuminate\Support\Facades\Hash;
 
 
@@ -411,13 +413,9 @@ class AdminController extends Controller
         ]);
     }
 
-    // ==========================================
-    // OWNER MANAGEMENT
-    // ==========================================
-
     public function ownersIndex(Request $request)
     {
-        $query = DB::table('owners');
+        $query = Owner::with('user', 'elders');
 
         // Search filter
         if ($request->filled('search')) {
@@ -438,32 +436,25 @@ class AdminController extends Controller
         $owners = $query->orderBy('created_at', 'desc')->paginate(10);
 
         // Get stats
-        $totalOwners = DB::table('owners')->count();
-        $activeOwners = DB::table('owners')->where('status', 'active')->count();
-        $guardianCount = DB::table('owners')->where('relationship', 'guardian')->count();
+        $totalOwners = Owner::count();
+        $activeOwners = Owner::where('status', 'active')->count();
+        $inactiveOwners = Owner::where('status', 'inactive')->count();
+        $guardianCount = Owner::where('relationship', 'guardian')->count();
 
         // Count linked owners (owners with at least one elder)
         $linkedOwners = DB::table('elder_owner')
             ->distinct('owner_id')
             ->count('owner_id');
 
-        // Load elders for each owner
-        foreach ($owners as $owner) {
-            $owner->elders = DB::table('elder_owner')
-                ->join('elders', 'elder_owner.elder_id', '=', 'elders.id')
-                ->where('elder_owner.owner_id', $owner->id)
-                ->select('elders.*')
-                ->get();
-        }
-
+        // Menu Access
         $userRole = auth()->user()->role ?? 'guest';
-
-        $menus = Menu::with(['children.accesses','accesses'])
+        $menus = Menu::with(['children.accesses', 'accesses'])
             ->whereNull('parent_id')
             ->where('status', 'active')
             ->whereHas('accesses', function ($query) use ($userRole) {
                 $query->where('role', $userRole)
-                    ->where('can_view', 1);})
+                    ->where('can_view', 1);
+            })
             ->orderBy('sort_order')
             ->get();
 
@@ -471,6 +462,7 @@ class AdminController extends Controller
             'owners',
             'totalOwners',
             'activeOwners',
+            'inactiveOwners',
             'guardianCount',
             'linkedOwners',
             'menus',
@@ -480,8 +472,22 @@ class AdminController extends Controller
 
     public function ownersCreate()
     {
-        $elders = DB::table('elders')->where('status', 'active')->get();
-        return view('admin.owners.create', compact('elders'));
+        $elders = Elder::where('status', 'active')->get();
+        $users = User::where('role', 'owner')->get();
+        
+        // Menu Access
+        $userRole = auth()->user()->role ?? 'guest';
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('admin.owners.create', compact('elders', 'users', 'menus', 'userRole'));
     }
 
     public function ownersStore(Request $request)
@@ -497,15 +503,39 @@ class AdminController extends Controller
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'elder_ids' => 'nullable|array',
             'elder_ids.*' => 'exists:elders,id',
+            
+            // User account fields
+            'create_user_account' => 'nullable|boolean',
+            'user_id' => 'nullable|exists:users,id',
+            'user_email' => 'nullable|email|unique:users,email',
+            'user_password' => 'nullable|string|min:6',
         ]);
 
         DB::beginTransaction();
 
         try {
+            $user = null;
 
-            
-            // Prepare data
+            // Create user account if requested
+            if ($request->has('create_user_account') && $request->create_user_account) {
+                if ($request->filled('user_id')) {
+                    // Use existing user
+                    $user = User::find($request->user_id);
+                } elseif ($request->filled('user_email') && $request->filled('user_password')) {
+                    // Create new user
+                    $user = User::create([
+                        'name' => $validated['name'],
+                        'email' => $request->user_email,
+                        'password' => Hash::make($request->user_password),
+                        'role' => 'owner',
+                        'status' => $validated['status'],
+                    ]);
+                }
+            }
+
+            // Prepare owner data
             $data = [
+                'user_id' => $user ? $user->id : null,
                 'name' => $validated['name'],
                 'nic' => $validated['nic'] ?? null,
                 'phone' => $validated['phone'],
@@ -513,27 +543,20 @@ class AdminController extends Controller
                 'address' => $validated['address'] ?? null,
                 'relationship' => $validated['relationship'] ?? null,
                 'status' => $validated['status'],
-                'created_at' => now(),
-                'updated_at' => now(),
             ];
 
+            // Handle photo upload
             if ($request->hasFile('photo')) {
                 $photoPath = $request->file('photo')->store('owner-photos', 'public');
                 $data['photo'] = $photoPath;
             }
 
-            $ownerId = DB::table('owners')->insertGetId($data);
+            // Create owner
+            $owner = Owner::create($data);
 
             // Attach elders
             if ($request->filled('elder_ids')) {
-                foreach ($request->elder_ids as $elderId) {
-                    DB::table('elder_owner')->insert([
-                        'elder_id' => $elderId,
-                        'owner_id' => $ownerId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
+                $owner->elders()->attach($request->elder_ids);
             }
 
             DB::commit();
@@ -555,45 +578,49 @@ class AdminController extends Controller
 
     public function ownersShow($id)
     {
-        $owner = DB::table('owners')->where('id', $id)->first();
+        $owner = Owner::with('user', 'elders')->findOrFail($id);
         
-        if (!$owner) {
-            abort(404, 'Owner not found');
-        }
-
-        // Get owner's elders
-        $owner->elders = DB::table('elder_owner')
-            ->join('elders', 'elder_owner.elder_id', '=', 'elders.id')
-            ->where('elder_owner.owner_id', $id)
-            ->select('elders.*')
+        // Menu Access
+        $userRole = auth()->user()->role ?? 'guest';
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
             ->get();
 
-        return view('admin.owners.show', compact('owner'));
+        return view('admin.owners.show', compact('owner', 'menus', 'userRole'));
     }
 
     public function ownersEdit($id)
     {
-        $owner = DB::table('owners')->where('id', $id)->first();
+        $owner = Owner::with('user')->findOrFail($id);
+        $elders = Elder::where('status', 'active')->get();
+        $ownerElderIds = $owner->elders()->pluck('elders.id')->toArray();
+        $users = User::where('role', 'owner')->get();
         
-        if (!$owner) {
-            abort(404, 'Owner not found');
-        }
+        // Menu Access
+        $userRole = auth()->user()->role ?? 'guest';
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
 
-        // Get owner's elder IDs
-        $ownerElderIds = DB::table('elder_owner')
-            ->where('owner_id', $id)
-            ->pluck('elder_id')
-            ->toArray();
-
-        $owner->elder_ids = $ownerElderIds;
-
-        $elders = DB::table('elders')->where('status', 'active')->get();
-
-        return view('admin.owners.edit', compact('owner', 'elders'));
+        return view('admin.owners.edit', compact('owner', 'elders', 'ownerElderIds', 'users', 'menus', 'userRole'));
     }
 
     public function ownersUpdate(Request $request, $id)
     {
+        $owner = Owner::findOrFail($id);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'nic' => 'nullable|string|max:50|unique:owners,nic,' . $id,
@@ -605,18 +632,53 @@ class AdminController extends Controller
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'elder_ids' => 'nullable|array',
             'elder_ids.*' => 'exists:elders,id',
+            
+            // User account fields
+            'create_user_account' => 'nullable|boolean',
+            'user_id' => 'nullable|exists:users,id',
+            'user_email' => 'nullable|email|unique:users,email,' . ($owner->user_id ?? 'NULL'),
+            'user_password' => 'nullable|string|min:6',
         ]);
 
         DB::beginTransaction();
 
         try {
-            $owner = DB::table('owners')->where('id', $id)->first();
-            
-            if (!$owner) {
-                throw new \Exception('Owner not found');
+            // Handle user account
+            if ($request->has('create_user_account') && $request->create_user_account) {
+                if ($request->filled('user_id')) {
+                    // Use existing user
+                    $user = User::find($request->user_id);
+                    if ($user) {
+                        // Update user name if changed
+                        if ($user->name !== $request->name) {
+                            $user->name = $request->name;
+                            $user->save();
+                        }
+                        $owner->user_id = $user->id;
+                    }
+                } elseif ($request->filled('user_email')) {
+                    // Check if user already exists
+                    $existingUser = User::where('email', $request->user_email)->first();
+                    if ($existingUser) {
+                        $owner->user_id = $existingUser->id;
+                    } else {
+                        // Create new user
+                        $user = User::create([
+                            'name' => $request->name,
+                            'email' => $request->user_email,
+                            'password' => Hash::make($request->user_password ?? 'password123'),
+                            'role' => 'owner',
+                            'status' => $validated['status'],
+                        ]);
+                        $owner->user_id = $user->id;
+                    }
+                }
+            } else {
+                // If user account is not being created, remove user_id
+                $owner->user_id = null;
             }
 
-            // Prepare data
+            // Update owner data
             $data = [
                 'name' => $validated['name'],
                 'nic' => $validated['nic'] ?? null,
@@ -625,9 +687,10 @@ class AdminController extends Controller
                 'address' => $validated['address'] ?? null,
                 'relationship' => $validated['relationship'] ?? null,
                 'status' => $validated['status'],
-                'updated_at' => now(),
+                'user_id' => $owner->user_id,
             ];
 
+            // Handle photo upload
             if ($request->hasFile('photo')) {
                 if ($owner->photo && Storage::disk('public')->exists($owner->photo)) {
                     Storage::disk('public')->delete($owner->photo);
@@ -636,20 +699,14 @@ class AdminController extends Controller
                 $data['photo'] = $photoPath;
             }
 
-            DB::table('owners')->where('id', $id)->update($data);
+            // Update owner
+            $owner->update($data);
 
-            // Sync elders - delete existing and insert new
-            DB::table('elder_owner')->where('owner_id', $id)->delete();
-
+            // Sync elders
             if ($request->filled('elder_ids')) {
-                foreach ($request->elder_ids as $elderId) {
-                    DB::table('elder_owner')->insert([
-                        'elder_id' => $elderId,
-                        'owner_id' => $id,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
+                $owner->elders()->sync($request->elder_ids);
+            } else {
+                $owner->elders()->detach();
             }
 
             DB::commit();
@@ -674,21 +731,26 @@ class AdminController extends Controller
         DB::beginTransaction();
 
         try {
-            $owner = DB::table('owners')->where('id', $id)->first();
-            
-            if (!$owner) {
-                throw new \Exception('Owner not found');
+            $owner = Owner::findOrFail($id);
+
+            // Delete user account if exists
+            if ($owner->user_id) {
+                $user = User::find($owner->user_id);
+                if ($user) {
+                    $user->delete();
+                }
             }
 
+            // Delete photo
             if ($owner->photo && Storage::disk('public')->exists($owner->photo)) {
                 Storage::disk('public')->delete($owner->photo);
             }
 
             // Delete relationships
-            DB::table('elder_owner')->where('owner_id', $id)->delete();
+            $owner->elders()->detach();
 
             // Delete owner
-            DB::table('owners')->where('id', $id)->delete();
+            $owner->delete();
 
             DB::commit();
 
