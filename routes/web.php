@@ -103,3 +103,14 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::put('/caregivers/{id}',[AdminController::class, 'caregiversUpdate'])->name('admin.caregivers.update');
     Route::delete('/caregivers/{id}',[AdminController::class, 'caregiversDestroy'])->name('admin.caregivers.destroy');
 });
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    //healthcare
+    Route::get('/healthcare',[AdminController::class, 'healthcareIndex'])->name('healthcare.index');
+    Route::get('/healthcare/create',[AdminController::class, 'healthcareCreate'])->name('healthcare.create');
+    Route::post('/healthcare',[AdminController::class, 'healthcareStore'])->name('healthcare.store');
+    Route::get('/healthcare/{id}',[AdminController::class, 'healthcareShow'])->name('healthcare.show');
+    Route::get('/healthcare/{id}/edit',[AdminController::class, 'healthcareEdit'])->name('healthcare.edit');
+    Route::put('/healthcare/{id}',[AdminController::class, 'healthcareUpdate'])->name('healthcare.update');
+    Route::delete('/healthcare/{id}',[AdminController::class, 'healthcareDestroy'])->name('healthcare.destroy');
+});

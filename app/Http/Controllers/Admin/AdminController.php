@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Caregiver;
 use App\Models\Elder;
 use App\Models\Owner;
+use App\Models\Healthcare;
 use Illuminate\Support\Facades\Hash;
 
 
@@ -1225,6 +1226,443 @@ class AdminController extends Controller
             ->with('success', 'Caregiver deleted successfully.');
     }
 
+    // ==========================================
+    // HEALTHCARE MANAGEMENT
+    // ========================================
+
+    public function healthcareIndex(Request $request)
+    {
+        $query = Healthcare::with('user');
+
+        // Search
+        if ($request->filled('search')) {
+
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+
+                $q->where('staff_code', 'LIKE', "%{$search}%")
+                ->orWhere('nic', 'LIKE', "%{$search}%")
+                ->orWhere('phone', 'LIKE', "%{$search}%")
+                ->orWhere('specialization', 'LIKE', "%{$search}%")
+
+                ->orWhereHas('user', function ($userQuery) use ($search) {
+
+                    $userQuery->where('name', 'LIKE', "%{$search}%")
+                                ->orWhere('email', 'LIKE', "%{$search}%");
+
+                });
+            });
+        }
+
+
+        // Status
+        if ($request->filled('status')) {
+
+            $status = $request->status;
+
+            $query->whereHas('user', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+
+        $healthcare = $query
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+
+        // Statistics
+
+        $totalHealthcare = Healthcare::count();
+
+        $activeHealthcare = Healthcare::whereHas('user', function ($q) {
+            $q->where('status', 'active');
+        })->count();
+
+        $inactiveHealthcare = Healthcare::whereHas('user', function ($q) {
+            $q->where('status', 'inactive');
+        })->count();
+
+
+        // Menu Access
+
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+        ->whereNull('parent_id')
+        ->where('status', 'active')
+        ->whereHas('accesses', function ($query) use ($userRole) {
+
+            $query->where('role', $userRole)
+                ->where('can_view', 1);
+
+        })
+        ->orderBy('sort_order')
+        ->get();
+
+
+        return view('admin.healthcare.index', compact(
+            'healthcare',
+            'totalHealthcare',
+            'activeHealthcare',
+            'inactiveHealthcare',
+            'menus',
+            'userRole'
+        ));
+    }
+
+    public function healthcareCreate()
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+        ->whereNull('parent_id')
+        ->where('status', 'active')
+        ->whereHas('accesses', function ($query) use ($userRole) {
+
+            $query->where('role', $userRole)
+                ->where('can_view', 1);
+
+        })
+        ->orderBy('sort_order')
+        ->get();
+
+
+        return view(
+            'admin.healthcare.create',
+            compact('menus', 'userRole')
+        );
+    }
+
+    public function healthcareStore(Request $request)
+    {
+        $request->validate([
+
+            'name' => 'required|string|max:255',
+
+            'email' => 'required|email|max:255|unique:users,email',
+
+            'password' => 'required|string|min:6|confirmed',
+
+            'status' => 'required|in:active,inactive',
+
+            'staff_code' => 'nullable|string|max:50',
+
+            'nic' => 'nullable|string|max:20',
+
+            'date_of_birth' => 'nullable|date',
+
+            'gender' => 'nullable|in:male,female,other',
+
+            'phone' => 'nullable|string|max:30',
+
+            'address' => 'nullable|string',
+
+            'joining_date' => 'nullable|date',
+
+            'employment_type' =>
+                'nullable|in:full_time,part_time,contract,temporary',
+
+            'specialization' =>
+                'nullable|string|max:255',
+
+            'qualifications' =>
+                'nullable|string',
+
+            'experience' =>
+                'nullable|string',
+
+            'emergency_contact_name' =>
+                'nullable|string|max:255',
+
+            'emergency_relationship' =>
+                'nullable|string|max:100',
+
+            'emergency_phone' =>
+                'nullable|string|max:30',
+
+            'notes' =>
+                'nullable|string',
+
+        ]);
+
+
+        DB::transaction(function () use ($request) {
+
+            // Create User
+
+            $user = User::create([
+
+                'name' => $request->name,
+
+                'email' => $request->email,
+
+                'password' => Hash::make($request->password),
+
+                'role' => 'healthcare',
+
+                'status' => $request->status,
+
+            ]);
+
+
+            // Create Healthcare Profile
+
+            Healthcare::create([
+
+                'user_id' => $user->id,
+
+                'staff_code' => $request->staff_code,
+
+                'nic' => $request->nic,
+
+                'date_of_birth' => $request->date_of_birth,
+
+                'gender' => $request->gender,
+
+                'phone' => $request->phone,
+
+                'address' => $request->address,
+
+                'joining_date' => $request->joining_date,
+
+                'employment_type' =>
+                    $request->employment_type ?? 'full_time',
+
+                'specialization' =>
+                    $request->specialization,
+
+                'qualifications' =>
+                    $request->qualifications,
+
+                'experience' =>
+                    $request->experience,
+
+                'emergency_contact_name' =>
+                    $request->emergency_contact_name,
+
+                'emergency_relationship' =>
+                    $request->emergency_relationship,
+
+                'emergency_phone' =>
+                    $request->emergency_phone,
+
+                'notes' =>
+                    $request->notes,
+
+            ]);
+
+        });
+
+
+        return redirect()
+            ->route('admin.healthcare.index')
+            ->with('success', 'Healthcare staff created successfully.');
+    }
+
+    public function healthcareShow($id)
+    {
+        $healthcare = Healthcare::with('user')
+            ->findOrFail($id);
+
+
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+        ->whereNull('parent_id')
+        ->where('status', 'active')
+        ->whereHas('accesses', function ($query) use ($userRole) {
+
+            $query->where('role', $userRole)
+                ->where('can_view', 1);
+
+        })
+        ->orderBy('sort_order')
+        ->get();
+
+
+        return view(
+            'admin.healthcare.show',
+            compact(
+                'healthcare',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function healthcareUpdate(Request $request, $id)
+    {
+        $healthcare = Healthcare::with('user')
+            ->findOrFail($id);
+
+
+        $request->validate([
+
+            'name' => 'required|string|max:255',
+
+            'email' => 'required|email|max:255|unique:users,email,' .
+                $healthcare->user_id,
+
+            'password' => 'nullable|string|min:6|confirmed',
+
+            'status' => 'required|in:active,inactive',
+
+            'staff_code' => 'nullable|string|max:50',
+
+            'nic' => 'nullable|string|max:20',
+
+            'date_of_birth' => 'nullable|date',
+
+            'gender' => 'nullable|in:male,female,other',
+
+            'phone' => 'nullable|string|max:30',
+
+            'address' => 'nullable|string',
+
+            'joining_date' => 'nullable|date',
+
+            'employment_type' =>
+                'nullable|in:full_time,part_time,contract,temporary',
+
+            'specialization' =>
+                'nullable|string|max:255',
+
+            'qualifications' =>
+                'nullable|string',
+
+            'experience' =>
+                'nullable|string',
+
+            'emergency_contact_name' =>
+                'nullable|string|max:255',
+
+            'emergency_relationship' =>
+                'nullable|string|max:100',
+
+            'emergency_phone' =>
+                'nullable|string|max:30',
+
+            'notes' =>
+                'nullable|string',
+
+        ]);
+
+
+        DB::transaction(function () use ($request, $healthcare) {
+
+            // Update User
+
+            $user = $healthcare->user;
+
+            $user->name = $request->name;
+
+            $user->email = $request->email;
+
+            $user->status = $request->status;
+
+
+            if ($request->filled('password')) {
+
+                $user->password =
+                    Hash::make($request->password);
+
+            }
+
+            $user->save();
+
+
+            // Update Healthcare
+
+            $healthcare->staff_code =
+                $request->staff_code;
+
+            $healthcare->nic =
+                $request->nic;
+
+            $healthcare->date_of_birth =
+                $request->date_of_birth;
+
+            $healthcare->gender =
+                $request->gender;
+
+            $healthcare->phone =
+                $request->phone;
+
+            $healthcare->address =
+                $request->address;
+
+            $healthcare->joining_date =
+                $request->joining_date;
+
+            $healthcare->employment_type =
+                $request->employment_type;
+
+            $healthcare->specialization =
+                $request->specialization;
+
+            $healthcare->qualifications =
+                $request->qualifications;
+
+            $healthcare->experience =
+                $request->experience;
+
+            $healthcare->emergency_contact_name =
+                $request->emergency_contact_name;
+
+            $healthcare->emergency_relationship =
+                $request->emergency_relationship;
+
+            $healthcare->emergency_phone =
+                $request->emergency_phone;
+
+            $healthcare->notes =
+                $request->notes;
+
+            $healthcare->save();
+
+        });
+
+
+        return redirect()
+            ->route('admin.healthcare.index')
+            ->with('success', 'Healthcare staff updated successfully.');
+    }
+
+    public function healthcareDestroy($id)
+    {
+        $healthcare = Healthcare::with('user')
+            ->findOrFail($id);
+
+
+        DB::transaction(function () use ($healthcare) {
+
+            $user = $healthcare->user;
+
+            $healthcare->delete();
+
+            if ($user) {
+                $user->delete();
+            }
+
+        });
+
+
+        return redirect()
+            ->route('admin.healthcare.index')
+            ->with('success', 'Healthcare staff deleted successfully.');
+    }
 
 
 }
