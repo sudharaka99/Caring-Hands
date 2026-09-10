@@ -12,6 +12,9 @@ use App\Models\Caregiver;
 use App\Models\Elder;
 use App\Models\Owner;
 use App\Models\Healthcare;
+use App\Models\Manager;
+use App\Models\ShiftType;
+use App\Models\StaffShift;
 use Illuminate\Support\Facades\Hash;
 
 
@@ -1664,5 +1667,722 @@ class AdminController extends Controller
             ->with('success', 'Healthcare staff deleted successfully.');
     }
 
+
+    // ==========================================
+    // MANAGERS MANAGEMENT
+    // ==========================================
+
+    public function managersIndex(Request $request)
+    {
+        $query = Manager::with('user');
+
+        // Search
+        if ($request->filled('search')) {
+
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+
+                $q->where('staff_code', 'LIKE', "%{$search}%")
+                ->orWhere('nic', 'LIKE', "%{$search}%")
+                ->orWhere('phone', 'LIKE', "%{$search}%")
+
+                ->orWhereHas('user', function ($userQuery) use ($search) {
+
+                    $userQuery->where('name', 'LIKE', "%{$search}%")
+                                ->orWhere('email', 'LIKE', "%{$search}%");
+
+                });
+
+            });
+        }
+
+        // Status filter from users table
+        if ($request->filled('status')) {
+
+            $status = $request->status;
+
+            $query->whereHas('user', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+        $managers = $query
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        // ==========================================
+        // STATISTICS
+        // ==========================================
+
+        $totalManagers = Manager::count();
+        $activeManagers = Manager::whereHas('user', function ($q) {
+            $q->where('status', 'active');
+        })->count();
+
+        $inactiveManagers = Manager::whereHas('user', function ($q) {
+            $q->where('status', 'inactive');
+        })->count();
+
+        // ==========================================
+        // MENU ACCESS
+        $userRole = auth()->user()->role ?? 'guest';
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();    
+
+        return view('admin.managers.index', compact(
+            'managers',
+            'totalManagers',
+            'activeManagers',
+            'inactiveManagers',
+            'menus',
+            'userRole'
+        ));
+    }
+    
+    public function managersCreate()
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('admin.managers.create', compact('menus', 'userRole'));
+    }
+
+    public function managersStore(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
+            'status' => 'required|in:active,inactive',
+            'staff_code' => 'nullable|string|max:50',
+            'nic' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:30',
+            'address' => 'nullable|string',
+        ]);
+
+        DB::transaction(function () use ($request) {
+            // Create User
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'manager',
+                'status' => $request->status,
+            ]);
+
+            // Create Manager Profile
+            Manager::create([
+                'user_id' => $user->id,
+                'staff_code' => $request->staff_code,
+                'nic' => $request->nic,
+                'phone' => $request->phone,
+                'address' => $request->address,
+            ]);
+        });
+
+        return redirect()
+            ->route('admin.managers.index')
+            ->with('success', 'Manager created successfully.');
+    }
+
+    public function managersShow($id)
+    {
+        $manager = Manager::with('user')->findOrFail($id);
+
+        $userRole = auth()->user()->role ?? 'guest';
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('admin.managers.show', compact(
+            'manager',
+            'menus',
+            'userRole'
+        ));
+    }
+
+    public function managersEdit($id)
+    {
+        $manager = Manager::with('user')->findOrFail($id);
+
+        $userRole = auth()->user()->role ?? 'guest';
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('admin.managers.edit', compact(
+            'manager',
+            'menus',
+            'userRole'
+        ));
+    }
+
+    public function managersUpdate(Request $request, $id)
+    {
+        $manager = Manager::with('user')->findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $manager->user_id,
+            'password' => 'nullable|string|min:6|confirmed',
+            'status' => 'required|in:active,inactive',
+            'staff_code' => 'nullable|string|max:50',
+            'nic' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:30',
+            'address' => 'nullable|string',
+        ]);
+
+        DB::transaction(function () use ($request, $manager) {
+            // Update User
+            $user = $manager->user;
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->status = $request->status;
+
+            if ($request->filled('password')) {
+                $user->password = Hash::make($request->password);
+            }
+
+            $user->save();
+
+            // Update Manager Profile
+            $manager->staff_code = $request->staff_code;
+            $manager->nic = $request->nic;
+            $manager->phone = $request->phone;
+            $manager->address = $request->address;
+            $manager->save();
+        });
+
+        return redirect()
+            ->route('admin.managers.index')
+            ->with('success', 'Manager updated successfully.');
+    }
+
+    public function managersDestroy($id)
+    {
+        $manager = Manager::findOrFail($id);
+
+        DB::transaction(function () use ($manager) {
+            // Get linked user
+            $user = $manager->user;
+
+            // Delete manager profile
+            $manager->delete();
+
+            // Delete manager login account
+            if ($user) {
+                $user->delete();
+            }
+        });
+
+        return redirect()
+            ->route('admin.managers.index')
+            ->with('success', 'Manager deleted successfully.');
+    }
+
+
+    // ==========================================
+    // SHIFT MANAGEMENT
+    // ==========================================
+
+    public function shiftsIndex(Request $request)
+    {
+        $query = StaffShift::with([
+            'user',
+            'shiftType'
+        ]);
+
+        // Search
+        if ($request->filled('search')) {
+
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+
+                $q->whereHas('user', function ($userQuery) use ($search) {
+
+                    $userQuery->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%");
+
+                })
+                ->orWhereHas('shiftType', function ($shiftQuery) use ($search) {
+
+                    $shiftQuery->where('name', 'LIKE', "%{$search}%");
+
+                });
+
+            });
+        }
+
+        // Date filter
+        if ($request->filled('shift_date')) {
+
+            $query->whereDate(
+                'shift_date',
+                $request->shift_date
+            );
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+
+            $query->where(
+                'status',
+                $request->status
+            );
+        }
+
+        $shifts = $query
+            ->orderBy('shift_date', 'desc')
+            ->orderBy('start_time')
+            ->paginate(10)
+            ->withQueryString();
+
+        // Statistics
+        $totalShifts = StaffShift::count();
+
+        $scheduledShifts = StaffShift::where(
+            'status',
+            'scheduled'
+        )->count();
+
+        $completedShifts = StaffShift::where(
+            'status',
+            'completed'
+        )->count();
+
+        $cancelledShifts = StaffShift::where(
+            'status',
+            'cancelled'
+        )->count();
+
+        // Menu Access
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        return view(
+            'admin.shifts.index',
+            compact(
+                'shifts',
+                'totalShifts',
+                'scheduledShifts',
+                'completedShifts',
+                'cancelledShifts',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function shiftsCreate()
+    {
+        // Get active staff
+        $staff = User::whereIn('role', [
+            'caregiver',
+            'healthcare',
+            'manager'
+        ])
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        // Active shift types
+        $shiftTypes = ShiftType::where(
+            'status',
+            'active'
+        )
+            ->orderBy('start_time')
+            ->get();
+
+        // Menu Access
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        return view(
+            'admin.shifts.create',
+            compact(
+                'staff',
+                'shiftTypes',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function shiftsStore(Request $request)
+    {
+        $request->validate([
+
+            'user_id' => [
+                'required',
+                'exists:users,id'
+            ],
+
+            'shift_type_id' => [
+                'required',
+                'exists:shift_types,id'
+            ],
+
+            'shift_date' => [
+                'required',
+                'date'
+            ],
+
+            'start_time' => [
+                'nullable',
+                'date_format:H:i'
+            ],
+
+            'end_time' => [
+                'nullable',
+                'date_format:H:i'
+            ],
+
+            'status' => [
+                'required',
+                'in:scheduled,active,completed,cancelled,absent'
+            ],
+
+            'notes' => [
+                'nullable',
+                'string'
+            ],
+        ]);
+
+        // Make sure selected user is staff
+        $staff = User::where('id', $request->user_id)
+            ->whereIn('role', [
+                'caregiver',
+                'healthcare',
+                'manager'
+            ])
+            ->first();
+
+        if (!$staff) {
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Selected user is not a valid staff member.'
+                );
+        }
+
+        // Prevent duplicate shift
+        $existingShift = StaffShift::where(
+            'user_id',
+            $request->user_id
+        )
+            ->whereDate(
+                'shift_date',
+                $request->shift_date
+            )
+            ->whereIn('status', [
+                'scheduled',
+                'active'
+            ])
+            ->first();
+
+        if ($existingShift) {
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'This staff member already has an active/scheduled shift on this date.'
+                );
+        }
+
+        DB::transaction(function () use ($request) {
+
+            StaffShift::create([
+
+                'user_id' => $request->user_id,
+
+                'shift_type_id' => $request->shift_type_id,
+
+                'shift_date' => $request->shift_date,
+
+                'start_time' => $request->start_time,
+
+                'end_time' => $request->end_time,
+
+                'status' => $request->status,
+
+                'notes' => $request->notes,
+            ]);
+        });
+
+        return redirect()
+            ->route('admin.shifts.index')
+            ->with(
+                'success',
+                'Staff shift created successfully.'
+            );
+    }
+
+    public function shiftsShow($id)
+    {
+        $shift = StaffShift::with([
+            'user',
+            'shiftType'
+        ])
+            ->findOrFail($id);
+
+        // Menu Access
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        return view(
+            'admin.shifts.show',
+            compact(
+                'shift',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function shiftsEdit($id)
+    {
+        $shift = StaffShift::with([
+            'user',
+            'shiftType'
+        ])
+            ->findOrFail($id);
+
+        $staff = User::whereIn('role', [
+            'caregiver',
+            'healthcare',
+            'manager'
+        ])
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        $shiftTypes = ShiftType::where(
+            'status',
+            'active'
+        )
+            ->orderBy('start_time')
+            ->get();
+
+        // Menu Access
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        return view(
+            'admin.shifts.edit',
+            compact(
+                'shift',
+                'staff',
+                'shiftTypes',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function shiftsUpdate(Request $request, $id)
+    {
+        $shift = StaffShift::findOrFail($id);
+
+        $request->validate([
+
+            'user_id' => [
+                'required',
+                'exists:users,id'
+            ],
+
+            'shift_type_id' => [
+                'required',
+                'exists:shift_types,id'
+            ],
+
+            'shift_date' => [
+                'required',
+                'date'
+            ],
+
+            'start_time' => [
+                'nullable',
+                'date_format:H:i'
+            ],
+
+            'end_time' => [
+                'nullable',
+                'date_format:H:i'
+            ],
+
+            'status' => [
+                'required',
+                'in:scheduled,active,completed,cancelled,absent'
+            ],
+
+            'notes' => [
+                'nullable',
+                'string'
+            ],
+        ]);
+
+        // Prevent duplicate shift
+        $existingShift = StaffShift::where(
+            'user_id',
+            $request->user_id
+        )
+            ->whereDate(
+                'shift_date',
+                $request->shift_date
+            )
+            ->where('id', '!=', $id)
+            ->whereIn('status', [
+                'scheduled',
+                'active'
+            ])
+            ->first();
+
+        if ($existingShift) {
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'This staff member already has another active/scheduled shift on this date.'
+                );
+        }
+
+        DB::transaction(function () use (
+            $request,
+            $shift
+        ) {
+
+            $shift->update([
+
+                'user_id' => $request->user_id,
+
+                'shift_type_id' => $request->shift_type_id,
+
+                'shift_date' => $request->shift_date,
+
+                'start_time' => $request->start_time,
+
+                'end_time' => $request->end_time,
+
+                'status' => $request->status,
+
+                'notes' => $request->notes,
+            ]);
+        });
+
+        return redirect()
+            ->route('admin.shifts.index')
+            ->with(
+                'success',
+                'Staff shift updated successfully.'
+            );
+    }
+
+    public function shiftsDestroy($id)
+    {
+        $shift = StaffShift::findOrFail($id);
+
+        DB::transaction(function () use ($shift) {
+
+            $shift->delete();
+
+        });
+
+        return redirect()
+            ->route('admin.shifts.index')
+            ->with(
+                'success',
+                'Staff shift deleted successfully.'
+            );
+    }
 
 }

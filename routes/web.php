@@ -114,3 +114,25 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('/healthcare/{id}',[AdminController::class, 'healthcareUpdate'])->name('healthcare.update');
     Route::delete('/healthcare/{id}',[AdminController::class, 'healthcareDestroy'])->name('healthcare.destroy');
 });
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    //managers
+    Route::get('/managers',[AdminController::class, 'managersIndex'])->name('managers.index');
+    Route::get('/managers/create',[AdminController::class, 'managersCreate'])->name('managers.create');
+    Route::post('/managers',[AdminController::class, 'managersStore'])->name('managers.store');
+    Route::get('/managers/{id}',[AdminController::class, 'managersShow'])->name('managers.show');
+    Route::get('/managers/{id}/edit',[AdminController::class, 'managersEdit'])->name('managers.edit');
+    Route::put('/managers/{id}',[AdminController::class, 'managersUpdate'])->name('managers.update');
+    Route::delete('/managers/{id}',[AdminController::class, 'managersDestroy'])->name('managers.destroy');
+});
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    //staff shifts
+    Route::get('/staff-shifts',[AdminController::class, 'shiftsIndex'])->name('shifts.index');
+    Route::get('/staff-shifts/create',[AdminController::class, 'shiftsCreate'])->name('shifts.create');
+    Route::post('/staff-shifts',[AdminController::class, 'shiftsStore'])->name('shifts.store');
+    Route::get('/staff-shifts/{id}',[AdminController::class, 'shiftsShow'])->name('shifts.show');
+    Route::get('/staff-shifts/{id}/edit',[AdminController::class, 'shiftsEdit'])->name('shifts.edit');
+    Route::put('/staff-shifts/{id}',[AdminController::class, 'shiftsUpdate'])->name('shifts.update');
+    Route::delete('/staff-shifts/{id}',[AdminController::class, 'shiftsDestroy'])->name('shifts.destroy');
+});
