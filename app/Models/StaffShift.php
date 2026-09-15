@@ -34,4 +34,12 @@ class StaffShift extends Model
     {
         return $this->belongsTo(ShiftType::class, 'shift_type_id');
     }
+
+    public function attendance()
+    {
+        return $this->hasOne(
+            \App\Models\Attendance::class,
+            'staff_shift_id'
+        );
+    }
 }

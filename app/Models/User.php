@@ -212,4 +212,12 @@ class User extends Authenticatable
         }
         return $this->role === $role;
     }
+
+    public function attendances()
+    {
+        return $this->hasMany(
+            \App\Models\Attendance::class,
+            'user_id'
+        );
+    }
 }

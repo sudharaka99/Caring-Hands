@@ -136,3 +136,15 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('/staff-shifts/{id}',[AdminController::class, 'shiftsUpdate'])->name('shifts.update');
     Route::delete('/staff-shifts/{id}',[AdminController::class, 'shiftsDestroy'])->name('shifts.destroy');
 });
+
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+        // Attendance
+        Route::get('/attendance',[AdminController::class, 'attendanceIndex'])->name('attendance.index');
+        Route::get('/attendance/create',[AdminController::class, 'attendanceCreate'])->name('attendance.create');
+        Route::post('/attendance',[AdminController::class, 'attendanceStore'])->name('attendance.store');
+        Route::get('/attendance/{id}',[AdminController::class, 'attendanceShow'])->name('attendance.show');
+        Route::get('/attendance/{id}/edit',[AdminController::class, 'attendanceEdit'])->name('attendance.edit');
+        Route::put('/attendance/{id}',[AdminController::class, 'attendanceUpdate'])->name('attendance.update');
+        Route::delete('/attendance/{id}',[AdminController::class, 'attendanceDestroy'])->name('attendance.destroy');
+    });

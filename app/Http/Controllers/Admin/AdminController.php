@@ -15,6 +15,7 @@ use App\Models\Healthcare;
 use App\Models\Manager;
 use App\Models\ShiftType;
 use App\Models\StaffShift;
+use App\Models\Attendance;
 use Illuminate\Support\Facades\Hash;
 
 
@@ -2385,4 +2386,586 @@ class AdminController extends Controller
             );
     }
 
+    // ==========================================
+    // ATTENDANCE MANAGEMENT
+    // ==========================================
+
+    public function attendanceIndex(Request $request)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        /*
+        |--------------------------------------------------------------------------
+        | Accessible Menus
+        |--------------------------------------------------------------------------
+        */
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Attendance Query
+        |--------------------------------------------------------------------------
+        */
+
+        $query = Attendance::with([
+            'user',
+            'staffShift.shiftType'
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Search
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('search')) {
+
+            $search = $request->search;
+
+            $query->whereHas('user', function ($q) use ($search) {
+
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+
+            });
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Date Filter
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('attendance_date')) {
+
+            $query->where(
+                'attendance_date',
+                $request->attendance_date
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Filter
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('status')) {
+
+            $query->where(
+                'status',
+                $request->status
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Attendance List
+        |--------------------------------------------------------------------------
+        */
+
+        $attendances = $query
+            ->orderByDesc('attendance_date')
+            ->orderBy('check_in')
+            ->paginate(10)
+            ->withQueryString();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Statistics
+        |--------------------------------------------------------------------------
+        */
+
+        $totalAttendance = Attendance::count();
+
+        $presentAttendance = Attendance::where(
+            'status',
+            'present'
+        )->count();
+
+        $lateAttendance = Attendance::where(
+            'status',
+            'late'
+        )->count();
+
+        $absentAttendance = Attendance::where(
+            'status',
+            'absent'
+        )->count();
+
+        $leaveAttendance = Attendance::where(
+            'status',
+            'leave'
+        )->count();
+
+
+        return view(
+            'admin.attendance.index',
+            compact(
+                'attendances',
+                'totalAttendance',
+                'presentAttendance',
+                'lateAttendance',
+                'absentAttendance',
+                'leaveAttendance',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function attendanceCreate()
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Staff
+        |--------------------------------------------------------------------------
+        */
+
+        $staff = User::whereIn('role', [
+            'caregiver',
+            'healthcare',
+            'manager'
+        ])
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Today's / Upcoming Shifts
+        |--------------------------------------------------------------------------
+        */
+
+        $shifts = StaffShift::with([
+            'user',
+            'shiftType'
+        ])
+            ->whereIn('status', [
+                'scheduled',
+                'active'
+            ])
+            ->orderByDesc('shift_date')
+            ->get();
+
+
+        return view(
+            'admin.attendance.create',
+            compact(
+                'staff',
+                'shifts',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function attendanceStore(Request $request)
+    {
+        $validated = $request->validate([
+
+            'user_id' => [
+                'required',
+                'exists:users,id'
+            ],
+
+            'staff_shift_id' => [
+                'nullable',
+                'exists:staff_shifts,id'
+            ],
+
+            'attendance_date' => [
+                'required',
+                'date'
+            ],
+
+            'check_in' => [
+                'nullable',
+                'date_format:H:i'
+            ],
+
+            'check_out' => [
+                'nullable',
+                'date_format:H:i'
+            ],
+
+            'status' => [
+                'required',
+                'in:present,late,absent,leave,half_day'
+            ],
+
+            'notes' => [
+                'nullable',
+                'string'
+            ],
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Prevent Duplicate Attendance
+        |--------------------------------------------------------------------------
+        */
+
+        $exists = Attendance::where(
+            'user_id',
+            $validated['user_id']
+        )
+            ->where(
+                'attendance_date',
+                $validated['attendance_date']
+            )
+            ->exists();
+
+
+        if ($exists) {
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Attendance already exists for this staff member on this date.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Calculate Working Hours
+        |--------------------------------------------------------------------------
+        */
+
+        $workingHours = null;
+
+
+        if (
+            !empty($validated['check_in']) &&
+            !empty($validated['check_out'])
+        ) {
+
+            $checkIn = \Carbon\Carbon::createFromFormat(
+                'H:i',
+                $validated['check_in']
+            );
+
+            $checkOut = \Carbon\Carbon::createFromFormat(
+                'H:i',
+                $validated['check_out']
+            );
+
+
+            if ($checkOut->lessThan($checkIn)) {
+                $checkOut->addDay();
+            }
+
+
+            $minutes = $checkIn->diffInMinutes(
+                $checkOut
+            );
+
+            $workingHours = round(
+                $minutes / 60,
+                2
+            );
+        }
+
+
+        Attendance::create([
+
+            'user_id' => $validated['user_id'],
+
+            'staff_shift_id' =>
+                $validated['staff_shift_id'] ?? null,
+
+            'attendance_date' =>
+                $validated['attendance_date'],
+
+            'check_in' =>
+                $validated['check_in'] ?? null,
+
+            'check_out' =>
+                $validated['check_out'] ?? null,
+
+            'status' =>
+                $validated['status'],
+
+            'working_hours' =>
+                $workingHours,
+
+            'notes' =>
+                $validated['notes'] ?? null,
+        ]);
+
+
+        return redirect()
+            ->route('admin.attendance.index')
+            ->with(
+                'success',
+                'Attendance recorded successfully.'
+            );
+    }
+
+    public function attendanceEdit($id)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+
+        $attendance = Attendance::with([
+            'user',
+            'staffShift.shiftType'
+        ])->findOrFail($id);
+
+
+        $staff = User::whereIn('role', [
+            'caregiver',
+            'healthcare',
+            'manager'
+        ])
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+
+        $shifts = StaffShift::with([
+            'user',
+            'shiftType'
+        ])
+            ->orderByDesc('shift_date')
+            ->get();
+
+
+        return view(
+            'admin.attendance.edit',
+            compact(
+                'attendance',
+                'staff',
+                'shifts',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function attendanceUpdate(Request $request,$id) 
+    {
+
+        $attendance = Attendance::findOrFail($id);
+
+
+        $validated = $request->validate([
+
+            'user_id' => [
+                'required',
+                'exists:users,id'
+            ],
+
+            'staff_shift_id' => [
+                'nullable',
+                'exists:staff_shifts,id'
+            ],
+
+            'attendance_date' => [
+                'required',
+                'date'
+            ],
+
+            'check_in' => [
+                'nullable',
+                'date_format:H:i'
+            ],
+
+            'check_out' => [
+                'nullable',
+                'date_format:H:i'
+            ],
+
+            'status' => [
+                'required',
+                'in:present,late,absent,leave,half_day'
+            ],
+
+            'notes' => [
+                'nullable',
+                'string'
+            ],
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Duplicate Check
+        |--------------------------------------------------------------------------
+        */
+
+        $exists = Attendance::where(
+            'user_id',
+            $validated['user_id']
+        )
+            ->where(
+                'attendance_date',
+                $validated['attendance_date']
+            )
+            ->where(
+                'id',
+                '!=',
+                $attendance->id
+            )
+            ->exists();
+
+
+        if ($exists) {
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Attendance already exists for this staff member on this date.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Calculate Working Hours
+        |--------------------------------------------------------------------------
+        */
+
+        $workingHours = null;
+
+
+        if (
+            !empty($validated['check_in']) &&
+            !empty($validated['check_out'])
+        ) {
+
+            $checkIn = \Carbon\Carbon::createFromFormat(
+                'H:i',
+                $validated['check_in']
+            );
+
+            $checkOut = \Carbon\Carbon::createFromFormat(
+                'H:i',
+                $validated['check_out']
+            );
+
+
+            if ($checkOut->lessThan($checkIn)) {
+                $checkOut->addDay();
+            }
+
+
+            $minutes = $checkIn->diffInMinutes(
+                $checkOut
+            );
+
+            $workingHours = round(
+                $minutes / 60,
+                2
+            );
+        }
+
+
+        $attendance->update([
+
+            'user_id' =>
+                $validated['user_id'],
+
+            'staff_shift_id' =>
+                $validated['staff_shift_id'] ?? null,
+
+            'attendance_date' =>
+                $validated['attendance_date'],
+
+            'check_in' =>
+                $validated['check_in'] ?? null,
+
+            'check_out' =>
+                $validated['check_out'] ?? null,
+
+            'status' =>
+                $validated['status'],
+
+            'working_hours' =>
+                $workingHours,
+
+            'notes' =>
+                $validated['notes'] ?? null,
+        ]);
+
+
+        return redirect()
+            ->route('admin.attendance.index')
+            ->with(
+                'success',
+                'Attendance updated successfully.'
+            );
+    }
+
+    public function attendanceDestroy($id)
+    {
+        $attendance = Attendance::findOrFail($id);
+
+        $attendance->delete();
+
+        return redirect()
+            ->route('admin.attendance.index')
+            ->with(
+                'success',
+                'Attendance deleted successfully.'
+            );
+    }
 }
