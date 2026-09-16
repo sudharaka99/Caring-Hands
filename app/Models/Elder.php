@@ -259,4 +259,23 @@ class Elder extends Model
         if ($age < 90) return '80-89';
         return '90+';
     }
+
+    public function carePlans()
+    {
+        return $this->hasMany(
+            CarePlan::class,
+            'elder_id'
+        );
+    }
+
+    public function medications()
+    {
+        return $this->hasMany(Medication::class, 'elder_id');
+    }
+
+    public function medicationLogs()
+    {
+        return $this->hasMany(MedicationLog::class, 'elder_id');
+    }
+    
 }

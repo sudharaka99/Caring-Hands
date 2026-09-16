@@ -139,12 +139,34 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-        // Attendance
-        Route::get('/attendance',[AdminController::class, 'attendanceIndex'])->name('attendance.index');
-        Route::get('/attendance/create',[AdminController::class, 'attendanceCreate'])->name('attendance.create');
-        Route::post('/attendance',[AdminController::class, 'attendanceStore'])->name('attendance.store');
-        Route::get('/attendance/{id}',[AdminController::class, 'attendanceShow'])->name('attendance.show');
-        Route::get('/attendance/{id}/edit',[AdminController::class, 'attendanceEdit'])->name('attendance.edit');
-        Route::put('/attendance/{id}',[AdminController::class, 'attendanceUpdate'])->name('attendance.update');
-        Route::delete('/attendance/{id}',[AdminController::class, 'attendanceDestroy'])->name('attendance.destroy');
-    });
+    // Attendance
+    Route::get('/attendance',[AdminController::class, 'attendanceIndex'])->name('attendance.index');
+    Route::get('/attendance/create',[AdminController::class, 'attendanceCreate'])->name('attendance.create');
+    Route::post('/attendance',[AdminController::class, 'attendanceStore'])->name('attendance.store');
+    Route::get('/attendance/{id}',[AdminController::class, 'attendanceShow'])->name('attendance.show');
+    Route::get('/attendance/{id}/edit',[AdminController::class, 'attendanceEdit'])->name('attendance.edit');
+    Route::put('/attendance/{id}',[AdminController::class, 'attendanceUpdate'])->name('attendance.update');
+    Route::delete('/attendance/{id}',[AdminController::class, 'attendanceDestroy'])->name('attendance.destroy');
+});
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    // Care Plans
+    Route::get('/care-plans',[AdminController::class, 'carePlansIndex'])->name('care-plans.index');
+    Route::get('/care-plans/create',[AdminController::class, 'carePlansCreate'])->name('care-plans.create');
+    Route::post('/care-plans',[AdminController::class, 'carePlansStore'])->name('care-plans.store');
+    Route::get('/care-plans/{id}',[AdminController::class, 'carePlansShow'])->name('care-plans.show');
+    Route::get('/care-plans/{id}/edit',[AdminController::class, 'carePlansEdit'])->name('care-plans.edit');
+    Route::put('/care-plans/{id}',[AdminController::class, 'carePlansUpdate'])->name('care-plans.update');
+    Route::delete('/care-plans/{id}',[AdminController::class, 'carePlansDestroy'])->name('care-plans.destroy');
+});
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    // Medications
+    Route::get('/medications',[AdminController::class, 'medicationIndex'])->name('medication.index');
+    Route::get('/medications/create',[AdminController::class, 'medicationCreate'])->name('medication.create');
+    Route::post('/medications',[AdminController::class, 'medicationStore'])->name('medication.store');
+    Route::get('/medications/{id}',[AdminController::class, 'medicationShow'])->name('medication.show');
+    Route::get('/medications/{id}/edit',[AdminController::class, 'medicationEdit'])->name('medication.edit');
+    Route::put('/medications/{id}',[AdminController::class, 'medicationUpdate'])->name('medication.update');
+    Route::delete('/medications/{id}',[AdminController::class, 'medicationDestroy'])->name('medication.destroy');
+});

@@ -85,4 +85,17 @@ class Caregiver extends Model
                 });
         });
     }
+
+    public function carePlans()
+    {
+        return $this->hasMany(
+            CarePlan::class,
+            'caregiver_id'
+        );
+    }
+
+    public function medicationLogs()
+    {
+        return $this->hasMany(MedicationLog::class, 'caregiver_id');
+    }
 }

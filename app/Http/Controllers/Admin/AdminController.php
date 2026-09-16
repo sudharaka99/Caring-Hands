@@ -16,6 +16,9 @@ use App\Models\Manager;
 use App\Models\ShiftType;
 use App\Models\StaffShift;
 use App\Models\Attendance;
+use App\Models\CarePlan;
+use App\Models\Medication;
+use App\Models\MedicationLog;
 use Illuminate\Support\Facades\Hash;
 
 
@@ -2968,4 +2971,716 @@ class AdminController extends Controller
                 'Attendance deleted successfully.'
             );
     }
+
+
+    // ==========================================
+    // CARE PLAN MANAGEMENT
+    // ==========================================
+
+    public function carePlansIndex(Request $request)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        /*
+        |--------------------------------------------------------------------------
+        | Accessible Menus
+        |--------------------------------------------------------------------------
+        */
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Care Plans
+        |--------------------------------------------------------------------------
+        */
+
+        $query = CarePlan::with([
+            'elder',
+            'caregiver.user'
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Search
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('search')) {
+
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+
+                $q->where('title', 'like', "%{$search}%")
+
+                    ->orWhere('care_needs', 'like', "%{$search}%")
+
+                    ->orWhereHas('elder', function ($elderQuery) use ($search) {
+
+                        $elderQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('elder_code', 'like', "%{$search}%")
+                        ->orWhere('nic', 'like', "%{$search}%");
+
+                    });
+
+            });
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Filter
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('status')) {
+
+            $query->where(
+                'status',
+                $request->status
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Priority Filter
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('priority')) {
+
+            $query->where(
+                'priority',
+                $request->priority
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Care Plans
+        |--------------------------------------------------------------------------
+        */
+
+        $carePlans = $query
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Statistics
+        |--------------------------------------------------------------------------
+        */
+
+        $totalCarePlans = CarePlan::count();
+
+        $activeCarePlans = CarePlan::where(
+            'status',
+            'active'
+        )->count();
+
+        $draftCarePlans = CarePlan::where(
+            'status',
+            'draft'
+        )->count();
+
+        $completedCarePlans = CarePlan::where(
+            'status',
+            'completed'
+        )->count();
+
+        $highPriorityPlans = CarePlan::whereIn(
+            'priority',
+            ['high', 'critical']
+        )->count();
+
+
+        return view(
+            'admin.care-plans.index',
+            compact(
+                'carePlans',
+                'totalCarePlans',
+                'activeCarePlans',
+                'draftCarePlans',
+                'completedCarePlans',
+                'highPriorityPlans',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function carePlansCreate()
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Elders
+        |--------------------------------------------------------------------------
+        */
+
+        $elders = Elder::orderBy('name')
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Caregivers
+        |--------------------------------------------------------------------------
+        */
+
+        $caregivers = Caregiver::with('user')
+            ->whereHas('user', function ($query) {
+
+                $query->where('role', 'caregiver')
+                    ->where('status', 'active');
+
+            })
+            ->get();
+
+
+        return view(
+            'admin.care-plans.create',
+            compact(
+                'elders',
+                'caregivers',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function carePlansStore(Request $request)
+    {
+        $validated = $request->validate([
+
+            'elder_id' => [
+                'required',
+                'exists:elders,id'
+            ],
+
+            'caregiver_id' => [
+                'nullable',
+                'exists:caregiver,id'
+            ],
+
+            'title' => [
+                'required',
+                'string',
+                'max:255'
+            ],
+
+            'care_needs' => [
+                'nullable',
+                'string'
+            ],
+
+            'goals' => [
+                'nullable',
+                'string'
+            ],
+
+            'activities' => [
+                'nullable',
+                'string'
+            ],
+
+            'start_date' => [
+                'required',
+                'date'
+            ],
+
+            'review_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:start_date'
+            ],
+
+            'priority' => [
+                'required',
+                'in:low,medium,high,critical'
+            ],
+
+            'status' => [
+                'required',
+                'in:draft,active,completed,cancelled'
+            ],
+
+            'notes' => [
+                'nullable',
+                'string'
+            ],
+        ]);
+
+
+        CarePlan::create($validated);
+
+
+        return redirect()
+            ->route('admin.care-plans.index')
+            ->with(
+                'success',
+                'Care plan created successfully.'
+            );
+    }
+
+    public function carePlansShow($id)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+
+        $carePlan = CarePlan::with([
+            'elder',
+            'caregiver.user'
+        ])->findOrFail($id);
+
+
+        return view(
+            'admin.care-plans.show',
+            compact(
+                'carePlan',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function carePlansEdit($id)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+
+        $menus = Menu::with([
+            'children.accesses',
+            'accesses'
+        ])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+
+        $carePlan = CarePlan::with([
+            'elder',
+            'caregiver.user'
+        ])->findOrFail($id);
+
+
+        $elders = Elder::orderBy('name')
+            ->get();
+
+
+        $caregivers = Caregiver::with('user')
+            ->whereHas('user', function ($query) {
+
+                $query->where('role', 'caregiver')
+                    ->where('status', 'active');
+
+            })
+            ->get();
+
+
+        return view(
+            'admin.care-plans.edit',
+            compact(
+                'carePlan',
+                'elders',
+                'caregivers',
+                'menus',
+                'userRole'
+            )
+        );
+    }
+
+    public function carePlansUpdate(Request $request,$id) 
+    {
+        $carePlan = CarePlan::findOrFail($id);
+
+
+        $validated = $request->validate([
+
+            'elder_id' => [
+                'required',
+                'exists:elders,id'
+            ],
+
+            'caregiver_id' => [
+                'nullable',
+                'exists:caregiver,id'
+            ],
+
+            'title' => [
+                'required',
+                'string',
+                'max:255'
+            ],
+
+            'care_needs' => [
+                'nullable',
+                'string'
+            ],
+
+            'goals' => [
+                'nullable',
+                'string'
+            ],
+
+            'activities' => [
+                'nullable',
+                'string'
+            ],
+
+            'start_date' => [
+                'required',
+                'date'
+            ],
+
+            'review_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:start_date'
+            ],
+
+            'priority' => [
+                'required',
+                'in:low,medium,high,critical'
+            ],
+
+            'status' => [
+                'required',
+                'in:draft,active,completed,cancelled'
+            ],
+
+            'notes' => [
+                'nullable',
+                'string'
+            ],
+        ]);
+
+
+        $carePlan->update($validated);
+
+
+        return redirect()
+            ->route('admin.care-plans.index')
+            ->with(
+                'success',
+                'Care plan updated successfully.'
+            );
+    }
+    
+    public function carePlansDestroy($id)
+    {
+        $carePlan = CarePlan::findOrFail($id);
+
+        $carePlan->delete();
+
+
+        return redirect()
+            ->route('admin.care-plans.index')
+            ->with(
+                'success',
+                'Care plan deleted successfully.'
+            );
+    }
+
+
+    //==========================================
+    // MEDICATION MANAGEMENT
+    //==========================================
+
+    public function medicationIndex(Request $request)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        $query = Medication::with('elder');
+
+        if ($request->filled('search')) {
+
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+
+                $q->where('medication_name', 'like', "%{$search}%")
+                ->orWhere('generic_name', 'like', "%{$search}%")
+                ->orWhere('prescribed_by', 'like', "%{$search}%")
+
+                ->orWhereHas('elder', function ($elderQuery) use ($search) {
+
+                    $elderQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('elder_code', 'like', "%{$search}%")
+                                ->orWhere('nic', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('route')) {
+            $query->where('route', $request->route);
+        }
+
+        $medications = $query
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        $totalMedications = Medication::count();
+
+        $activeMedications = Medication::where('status', 'active')->count();
+
+        $completedMedications = Medication::where('status', 'completed')->count();
+
+        $stoppedMedications = Medication::where('status', 'stopped')->count();
+
+        return view('admin.medication.index', compact(
+            'menus',
+            'medications',
+            'totalMedications',
+            'activeMedications',
+            'completedMedications',
+            'stoppedMedications'
+        ));
+    }
+
+    public function medicationCreate()
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        $elders = Elder::where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.medication.create', compact(
+            'menus',
+            'elders'
+        ));
+    }
+
+    public function medicationStore(Request $request)
+    {
+        $validated = $request->validate([
+            'elder_id' => 'required|exists:elders,id',
+
+            'medication_name' => 'required|string|max:255',
+
+            'generic_name' => 'nullable|string|max:255',
+
+            'dosage' => 'required|string|max:100',
+
+            'dosage_unit' => 'nullable|string|max:50',
+
+            'frequency' => 'required|in:once_daily,twice_daily,three_times_daily,four_times_daily,as_needed,weekly,custom',
+
+            'administration_time' => 'nullable|date_format:H:i',
+
+            'route' => 'required|in:oral,injection,topical,inhalation,eye,ear,other',
+
+            'start_date' => 'required|date',
+
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+
+            'prescribed_by' => 'nullable|string|max:255',
+
+            'purpose' => 'nullable|string',
+
+            'instructions' => 'nullable|string',
+
+            'status' => 'required|in:active,completed,stopped,cancelled',
+
+            'notes' => 'nullable|string',
+        ]);
+
+        Medication::create($validated);
+
+        return redirect()
+            ->route('admin.medication.index')
+            ->with('success', 'Medication added successfully.');
+    }
+
+    public function medicationShow($id)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        $medication = Medication::with([
+            'elder',
+            'logs.caregiver.user'
+        ])->findOrFail($id);
+
+        return view('admin.medication.show', compact(
+            'menus',
+            'medication'
+        ));
+    }
+
+    public function medicationEdit($id)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        $medication = Medication::findOrFail($id);
+
+        $elders = Elder::where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.medication.edit', compact(
+            'menus',
+            'medication',
+            'elders'
+        ));
+    }
+
+    public function medicationUpdate(Request $request, $id)
+    {
+        $medication = Medication::findOrFail($id);
+
+        $validated = $request->validate([
+            'elder_id' => 'required|exists:elders,id',
+
+            'medication_name' => 'required|string|max:255',
+
+            'generic_name' => 'nullable|string|max:255',
+
+            'dosage' => 'required|string|max:100',
+
+            'dosage_unit' => 'nullable|string|max:50',
+
+            'frequency' => 'required|in:once_daily,twice_daily,three_times_daily,four_times_daily,as_needed,weekly,custom',
+
+            'administration_time' => 'nullable|date_format:H:i',
+
+            'route' => 'required|in:oral,injection,topical,inhalation,eye,ear,other',
+
+            'start_date' => 'required|date',
+
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+
+            'prescribed_by' => 'nullable|string|max:255',
+
+            'purpose' => 'nullable|string',
+
+            'instructions' => 'nullable|string',
+
+            'status' => 'required|in:active,completed,stopped,cancelled',
+
+            'notes' => 'nullable|string',
+        ]);
+
+        $medication->update($validated);
+
+        return redirect()
+            ->route('admin.medication.index')
+            ->with('success', 'Medication updated successfully.');
+    }
+
+    public function medicationDestroy($id)
+    {
+        $medication = Medication::findOrFail($id);
+
+        $medication->delete();
+
+        return redirect()
+            ->route('admin.medication.index')
+            ->with('success', 'Medication deleted successfully.');
+    }
+
 }
