@@ -9,7 +9,8 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call([
-            SriLankanDataSeeder::class,   
+            SriLankanDataSeeder::class,  
+            DefaultDataSeeder::class, 
         ]);
     }
 }
