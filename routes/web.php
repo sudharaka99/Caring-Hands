@@ -8,11 +8,12 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\MenuAccessController;
-use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 
 use App\Http\Controllers\Manager\DashboardController as ManagerDashboard;
 use App\Http\Controllers\Caregiver\DashboardController as CaregiverDashboard;
 use App\Http\Controllers\Healthcare\DashboardController as HealthcareDashboard;
+
+use App\Http\Controllers\Caregiver\CaregiverController;
 
 
 /*
@@ -47,123 +48,269 @@ Route::middleware('auth')->group(function () {
     // ROLE DASHBOARDS
     // ==========================================
 
-    Route::middleware('role:admin')->get('/dashboard', [AdminDashboard::class, 'dashboard'])->name('admin.dashboard');
-    Route::middleware('role:manager')->get('/manager/dashboard', [ManagerDashboard::class, 'dashboard'])->name('manager.dashboard');
-    Route::middleware('role:caregiver')->get('/caregiver/dashboard', [CaregiverDashboard::class, 'dashboard'])->name('caregiver.dashboard');
-    Route::middleware('role:healthcare')->get('/healthcare/dashboard', [HealthcareDashboard::class, 'dashboard'])->name('healthcare.dashboard');
+    Route::middleware('role:admin')
+        ->get('/dashboard', [AdminController::class, 'dashboard'])
+        ->name('dashboard');
+
+    Route::middleware('role:manager')
+        ->get('/manager/dashboard', [ManagerDashboard::class, 'dashboard'])
+        ->name('manager.dashboard');
+
+    Route::middleware('role:caregiver')
+        ->get('/caregiver/dashboard', [CaregiverDashboard::class, 'dashboard'])
+        ->name('caregiver.dashboard');
+
+    Route::middleware('role:healthcare')
+        ->get('/healthcare/dashboard', [HealthcareDashboard::class, 'dashboard'])
+        ->name('healthcare.dashboard');
 
 
-    // ==========================================
-    // ADMIN ROUTES
-    // ==========================================
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN ROUTES (prefix: admin, name: admin.)
+    |--------------------------------------------------------------------------
+    */
 
-    Route::middleware('role:admin,manager')->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware('role:admin,manager')
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
 
-        // --- Dashboard ---
-        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-        Route::get('/dashboard/stats', [AdminController::class, 'dashboardStats'])->name('dashboard.stats');
+            // --- Dashboard ---
+            Route::get('/dashboard', [AdminController::class, 'dashboard'])
+                ->name('dashboard');
+            Route::get('/dashboard/stats', [AdminController::class, 'dashboardStats'])
+                ->name('dashboard.stats');
 
-        // --- Menu Management ---
-        Route::resource('menus', MenuController::class);
+            // --- Menu Management ---
+            Route::resource('menus', MenuController::class);
 
-        // --- Menu Access ---
-        Route::get('/menu-access', [MenuAccessController::class, 'index'])->name('menu-access.index');
-        Route::post('/menu-access', [MenuAccessController::class, 'update'])->name('menu-access.update');
+            // --- Menu Access ---
+            Route::get('/menu-access', [MenuAccessController::class, 'index'])
+                ->name('menu-access.index');
+            Route::post('/menu-access', [MenuAccessController::class, 'update'])
+                ->name('menu-access.update');
 
-        // --- Elders ---
-        Route::get('/elders', [AdminController::class, 'eldersIndex'])->name('elders.index');
-        Route::get('/elders/create', [AdminController::class, 'eldersCreate'])->name('elders.create');
-        Route::post('/elders', [AdminController::class, 'eldersStore'])->name('elders.store');
-        Route::get('/elders/{elder}', [AdminController::class, 'eldersShow'])->name('elders.show');
-        Route::get('/elders/{elder}/edit', [AdminController::class, 'eldersEdit'])->name('elders.edit');
-        Route::put('/elders/{elder}', [AdminController::class, 'eldersUpdate'])->name('elders.update');
-        Route::delete('/elders/{elder}', [AdminController::class, 'eldersDestroy'])->name('elders.destroy');
-        Route::get('/elders/search', [AdminController::class, 'eldersSearch'])->name('elders.search');
-        Route::get('/elders/export', [AdminController::class, 'eldersExport'])->name('elders.export');
-        Route::post('/elders/{elder}/toggle-status', [AdminController::class, 'eldersToggleStatus'])->name('elders.toggle-status');
+            // --- Elders ---
+            Route::get('/elders', [AdminController::class, 'eldersIndex'])
+                ->name('elders.index');
+            Route::get('/elders/create', [AdminController::class, 'eldersCreate'])
+                ->name('elders.create');
+            Route::post('/elders', [AdminController::class, 'eldersStore'])
+                ->name('elders.store');
+            Route::get('/elders/search', [AdminController::class, 'eldersSearch'])
+                ->name('elders.search');
+            Route::get('/elders/export', [AdminController::class, 'eldersExport'])
+                ->name('elders.export');
+            Route::get('/elders/{elder}', [AdminController::class, 'eldersShow'])
+                ->name('elders.show');
+            Route::get('/elders/{elder}/edit', [AdminController::class, 'eldersEdit'])
+                ->name('elders.edit');
+            Route::put('/elders/{elder}', [AdminController::class, 'eldersUpdate'])
+                ->name('elders.update');
+            Route::delete('/elders/{elder}', [AdminController::class, 'eldersDestroy'])
+                ->name('elders.destroy');
+            Route::post('/elders/{elder}/toggle-status', [AdminController::class, 'eldersToggleStatus'])
+                ->name('elders.toggle-status');
 
-        // --- Owners ---
-        Route::get('/owners', [AdminController::class, 'ownersIndex'])->name('owners.index');
-        Route::get('/owners/create', [AdminController::class, 'ownersCreate'])->name('owners.create');
-        Route::post('/owners', [AdminController::class, 'ownersStore'])->name('owners.store');
-        Route::get('/owners/{owner}', [AdminController::class, 'ownersShow'])->name('owners.show');
-        Route::get('/owners/{owner}/edit', [AdminController::class, 'ownersEdit'])->name('owners.edit');
-        Route::put('/owners/{owner}', [AdminController::class, 'ownersUpdate'])->name('owners.update');
-        Route::delete('/owners/{owner}', [AdminController::class, 'ownersDestroy'])->name('owners.destroy');
+            // --- Owners ---
+            Route::get('/owners', [AdminController::class, 'ownersIndex'])
+                ->name('owners.index');
+            Route::get('/owners/create', [AdminController::class, 'ownersCreate'])
+                ->name('owners.create');
+            Route::post('/owners', [AdminController::class, 'ownersStore'])
+                ->name('owners.store');
+            Route::get('/owners/{owner}', [AdminController::class, 'ownersShow'])
+                ->name('owners.show');
+            Route::get('/owners/{owner}/edit', [AdminController::class, 'ownersEdit'])
+                ->name('owners.edit');
+            Route::put('/owners/{owner}', [AdminController::class, 'ownersUpdate'])
+                ->name('owners.update');
+            Route::delete('/owners/{owner}', [AdminController::class, 'ownersDestroy'])
+                ->name('owners.destroy');
 
-        // --- Caregivers ---
-        Route::get('/caregivers', [AdminController::class, 'caregiversIndex'])->name('caregivers.index');
-        Route::get('/caregivers/create', [AdminController::class, 'caregiversCreate'])->name('caregivers.create');
-        Route::post('/caregivers', [AdminController::class, 'caregiversStore'])->name('caregivers.store');
-        Route::get('/caregivers/{id}', [AdminController::class, 'caregiversShow'])->name('caregivers.show');
-        Route::get('/caregivers/{id}/edit', [AdminController::class, 'caregiversEdit'])->name('caregivers.edit');
-        Route::put('/caregivers/{id}', [AdminController::class, 'caregiversUpdate'])->name('caregivers.update');
-        Route::delete('/caregivers/{id}', [AdminController::class, 'caregiversDestroy'])->name('caregivers.destroy');
+            // --- Caregivers ---
+            Route::get('/caregivers', [AdminController::class, 'caregiversIndex'])
+                ->name('caregivers.index');
+            Route::get('/caregivers/create', [AdminController::class, 'caregiversCreate'])
+                ->name('caregivers.create');
+            Route::post('/caregivers', [AdminController::class, 'caregiversStore'])
+                ->name('caregivers.store');
+            Route::get('/caregivers/{id}', [AdminController::class, 'caregiversShow'])
+                ->name('caregivers.show');
+            Route::get('/caregivers/{id}/edit', [AdminController::class, 'caregiversEdit'])
+                ->name('caregivers.edit');
+            Route::put('/caregivers/{id}', [AdminController::class, 'caregiversUpdate'])
+                ->name('caregivers.update');
+            Route::delete('/caregivers/{id}', [AdminController::class, 'caregiversDestroy'])
+                ->name('caregivers.destroy');
 
-        // --- Healthcare Staff ---
-        Route::get('/healthcare', [AdminController::class, 'healthcareIndex'])->name('healthcare.index');
-        Route::get('/healthcare/create', [AdminController::class, 'healthcareCreate'])->name('healthcare.create');
-        Route::post('/healthcare', [AdminController::class, 'healthcareStore'])->name('healthcare.store');
-        Route::get('/healthcare/{id}', [AdminController::class, 'healthcareShow'])->name('healthcare.show');
-        Route::get('/healthcare/{id}/edit', [AdminController::class, 'healthcareEdit'])->name('healthcare.edit');
-        Route::put('/healthcare/{id}', [AdminController::class, 'healthcareUpdate'])->name('healthcare.update');
-        Route::delete('/healthcare/{id}', [AdminController::class, 'healthcareDestroy'])->name('healthcare.destroy');
+            // --- Healthcare Staff ---
+            Route::get('/healthcare', [AdminController::class, 'healthcareIndex'])
+                ->name('healthcare.index');
+            Route::get('/healthcare/create', [AdminController::class, 'healthcareCreate'])
+                ->name('healthcare.create');
+            Route::post('/healthcare', [AdminController::class, 'healthcareStore'])
+                ->name('healthcare.store');
+            Route::get('/healthcare/{id}', [AdminController::class, 'healthcareShow'])
+                ->name('healthcare.show');
+            Route::get('/healthcare/{id}/edit', [AdminController::class, 'healthcareEdit'])
+                ->name('healthcare.edit');
+            Route::put('/healthcare/{id}', [AdminController::class, 'healthcareUpdate'])
+                ->name('healthcare.update');
+            Route::delete('/healthcare/{id}', [AdminController::class, 'healthcareDestroy'])
+                ->name('healthcare.destroy');
 
-        // --- Managers ---
-        Route::get('/managers', [AdminController::class, 'managersIndex'])->name('managers.index');
-        Route::get('/managers/create', [AdminController::class, 'managersCreate'])->name('managers.create');
-        Route::post('/managers', [AdminController::class, 'managersStore'])->name('managers.store');
-        Route::get('/managers/{id}', [AdminController::class, 'managersShow'])->name('managers.show');
-        Route::get('/managers/{id}/edit', [AdminController::class, 'managersEdit'])->name('managers.edit');
-        Route::put('/managers/{id}', [AdminController::class, 'managersUpdate'])->name('managers.update');
-        Route::delete('/managers/{id}', [AdminController::class, 'managersDestroy'])->name('managers.destroy');
+            // --- Managers ---
+            Route::get('/managers', [AdminController::class, 'managersIndex'])
+                ->name('managers.index');
+            Route::get('/managers/create', [AdminController::class, 'managersCreate'])
+                ->name('managers.create');
+            Route::post('/managers', [AdminController::class, 'managersStore'])
+                ->name('managers.store');
+            Route::get('/managers/{id}', [AdminController::class, 'managersShow'])
+                ->name('managers.show');
+            Route::get('/managers/{id}/edit', [AdminController::class, 'managersEdit'])
+                ->name('managers.edit');
+            Route::put('/managers/{id}', [AdminController::class, 'managersUpdate'])
+                ->name('managers.update');
+            Route::delete('/managers/{id}', [AdminController::class, 'managersDestroy'])
+                ->name('managers.destroy');
 
-        // --- Staff Shifts ---
-        Route::get('/staff-shifts', [AdminController::class, 'shiftsIndex'])->name('shifts.index');
-        Route::get('/staff-shifts/create', [AdminController::class, 'shiftsCreate'])->name('shifts.create');
-        Route::post('/staff-shifts', [AdminController::class, 'shiftsStore'])->name('shifts.store');
-        Route::get('/staff-shifts/{id}', [AdminController::class, 'shiftsShow'])->name('shifts.show');
-        Route::get('/staff-shifts/{id}/edit', [AdminController::class, 'shiftsEdit'])->name('shifts.edit');
-        Route::put('/staff-shifts/{id}', [AdminController::class, 'shiftsUpdate'])->name('shifts.update');
-        Route::delete('/staff-shifts/{id}', [AdminController::class, 'shiftsDestroy'])->name('shifts.destroy');
+            // --- Staff Shifts ---
+            Route::get('/staff-shifts', [AdminController::class, 'shiftsIndex'])
+                ->name('shifts.index');
+            Route::get('/staff-shifts/create', [AdminController::class, 'shiftsCreate'])
+                ->name('shifts.create');
+            Route::post('/staff-shifts', [AdminController::class, 'shiftsStore'])
+                ->name('shifts.store');
+            Route::get('/staff-shifts/{id}', [AdminController::class, 'shiftsShow'])
+                ->name('shifts.show');
+            Route::get('/staff-shifts/{id}/edit', [AdminController::class, 'shiftsEdit'])
+                ->name('shifts.edit');
+            Route::put('/staff-shifts/{id}', [AdminController::class, 'shiftsUpdate'])
+                ->name('shifts.update');
+            Route::delete('/staff-shifts/{id}', [AdminController::class, 'shiftsDestroy'])
+                ->name('shifts.destroy');
 
-        // --- Attendance ---
-        Route::get('/attendance', [AdminController::class, 'attendanceIndex'])->name('attendance.index');
-        Route::get('/attendance/create', [AdminController::class, 'attendanceCreate'])->name('attendance.create');
-        Route::post('/attendance', [AdminController::class, 'attendanceStore'])->name('attendance.store');
-        Route::get('/attendance/{id}', [AdminController::class, 'attendanceShow'])->name('attendance.show');
-        Route::get('/attendance/{id}/edit', [AdminController::class, 'attendanceEdit'])->name('attendance.edit');
-        Route::put('/attendance/{id}', [AdminController::class, 'attendanceUpdate'])->name('attendance.update');
-        Route::delete('/attendance/{id}', [AdminController::class, 'attendanceDestroy'])->name('attendance.destroy');
+            // --- Attendance ---
+            Route::get('/attendance', [AdminController::class, 'attendanceIndex'])
+                ->name('attendance.index');
+            Route::get('/attendance/create', [AdminController::class, 'attendanceCreate'])
+                ->name('attendance.create');
+            Route::post('/attendance', [AdminController::class, 'attendanceStore'])
+                ->name('attendance.store');
+            Route::get('/attendance/{id}', [AdminController::class, 'attendanceShow'])
+                ->name('attendance.show');
+            Route::get('/attendance/{id}/edit', [AdminController::class, 'attendanceEdit'])
+                ->name('attendance.edit');
+            Route::put('/attendance/{id}', [AdminController::class, 'attendanceUpdate'])
+                ->name('attendance.update');
+            Route::delete('/attendance/{id}', [AdminController::class, 'attendanceDestroy'])
+                ->name('attendance.destroy');
 
-        // --- Care Plans ---
-        Route::get('/care-plans', [AdminController::class, 'carePlansIndex'])->name('care-plans.index');
-        Route::get('/care-plans/create', [AdminController::class, 'carePlansCreate'])->name('care-plans.create');
-        Route::post('/care-plans', [AdminController::class, 'carePlansStore'])->name('care-plans.store');
-        Route::get('/care-plans/{id}', [AdminController::class, 'carePlansShow'])->name('care-plans.show');
-        Route::get('/care-plans/{id}/edit', [AdminController::class, 'carePlansEdit'])->name('care-plans.edit');
-        Route::put('/care-plans/{id}', [AdminController::class, 'carePlansUpdate'])->name('care-plans.update');
-        Route::delete('/care-plans/{id}', [AdminController::class, 'carePlansDestroy'])->name('care-plans.destroy');
+            // --- Care Plans ---
+            Route::get('/care-plans', [AdminController::class, 'carePlansIndex'])
+                ->name('care-plans.index');
+            Route::get('/care-plans/create', [AdminController::class, 'carePlansCreate'])
+                ->name('care-plans.create');
+            Route::post('/care-plans', [AdminController::class, 'carePlansStore'])
+                ->name('care-plans.store');
+            Route::get('/care-plans/{id}', [AdminController::class, 'carePlansShow'])
+                ->name('care-plans.show');
+            Route::get('/care-plans/{id}/edit', [AdminController::class, 'carePlansEdit'])
+                ->name('care-plans.edit');
+            Route::put('/care-plans/{id}', [AdminController::class, 'carePlansUpdate'])
+                ->name('care-plans.update');
+            Route::delete('/care-plans/{id}', [AdminController::class, 'carePlansDestroy'])
+                ->name('care-plans.destroy');
 
-        // --- Medications ---
-        Route::get('/medications', [AdminController::class, 'medicationIndex'])->name('medication.index');
-        Route::get('/medications/create', [AdminController::class, 'medicationCreate'])->name('medication.create');
-        Route::post('/medications', [AdminController::class, 'medicationStore'])->name('medication.store');
-        Route::get('/medications/{id}', [AdminController::class, 'medicationShow'])->name('medication.show');
-        Route::get('/medications/{id}/edit', [AdminController::class, 'medicationEdit'])->name('medication.edit');
-        Route::put('/medications/{id}', [AdminController::class, 'medicationUpdate'])->name('medication.update');
-        Route::delete('/medications/{id}', [AdminController::class, 'medicationDestroy'])->name('medication.destroy');
-    });
+            // --- Medications ---  ⚠️ SINGULAR name "medication.index"
+            Route::get('/medications', [AdminController::class, 'medicationIndex'])
+                ->name('medication.index');
+            Route::get('/medications/create', [AdminController::class, 'medicationCreate'])
+                ->name('medication.create');
+            Route::post('/medications', [AdminController::class, 'medicationStore'])
+                ->name('medication.store');
+            Route::get('/medications/{id}', [AdminController::class, 'medicationShow'])
+                ->name('medication.show');
+            Route::get('/medications/{id}/edit', [AdminController::class, 'medicationEdit'])
+                ->name('medication.edit');
+            Route::put('/medications/{id}', [AdminController::class, 'medicationUpdate'])
+                ->name('medication.update');
+            Route::delete('/medications/{id}', [AdminController::class, 'medicationDestroy'])
+                ->name('medication.destroy');
+        });
 
 
-    // ==========================================
-    // MANAGER ROUTES
-    // ==========================================
+    /*
+    |--------------------------------------------------------------------------
+    | MANAGER ROUTES (prefix: manager, name: manager.)
+    |--------------------------------------------------------------------------
+    */
 
-    Route::middleware('role:manager')->prefix('manager')->name('manager.')->group(function () {
+    Route::middleware('role:manager')
+        ->prefix('manager')
+        ->name('manager.')
+        ->group(function () {
 
-        Route::get('/dashboard', [ManagerDashboard::class, 'dashboard'])->name('dashboard');
+            Route::get('/dashboard', [ManagerDashboard::class, 'dashboard'])
+                ->name('dashboard');
 
-    });
+            // Add manager-specific routes here as needed
+        });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CAREGIVER ROUTES (prefix: caregiver, name: caregiver.)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('role:caregiver')
+        ->prefix('caregiver')
+        ->name('caregiver.')
+        ->group(function () {
+
+            // Dashboard
+            Route::get('/dashboard', [CaregiverDashboard::class, 'dashboard'])
+                ->name('dashboard');
+
+            // Elders — view own only
+            Route::get('/elders', [CaregiverController::class, 'eldersIndex'])
+                ->name('elders.index');
+            Route::get('/elders/{id}', [CaregiverController::class, 'eldersShow'])
+                ->name('elders.show');
+
+            // Care Plans — view + update
+            Route::get('/care-plans', [CaregiverController::class, 'carePlansIndex'])
+                ->name('care-plans.index');
+            Route::get('/care-plans/{id}', [CaregiverController::class, 'carePlansShow'])
+                ->name('care-plans.show');
+            Route::put('/care-plans/{id}', [CaregiverController::class, 'carePlansUpdate'])
+                ->name('care-plans.update');
+
+            // Medications — view + log  ⚠️ SINGULAR name "medication.*"
+            Route::get('/medications', [CaregiverController::class, 'medicationsIndex'])
+                ->name('medication.index');
+            Route::post('/medications/{id}/log', [CaregiverController::class, 'medicationLog'])
+                ->name('medication.log');
+
+            // Appointments — view own
+            Route::get('/appointments', [CaregiverController::class, 'appointmentsIndex'])
+                ->name('appointments.index');
+
+            // Shifts — view own
+            Route::get('/shifts', [CaregiverController::class, 'shiftsIndex'])
+                ->name('shifts.index');
+
+            // Attendance — view own
+            Route::get('/attendance', [CaregiverController::class, 'attendanceIndex'])
+                ->name('attendance.index');
+
+            // Messages
+            Route::get('/messages', [CaregiverController::class, 'messagesIndex'])
+                ->name('messages.index');
+        });
 
 });

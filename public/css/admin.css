@@ -3655,3 +3655,114 @@ input[type="file"] {
         font-size: 12px;
     }
 }
+
+/* ==========================================
+   SIDEBAR ROLE BADGE
+========================================== */
+
+.sidebar-role-badge {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    /* Sizing */
+    margin: 0 18px 22px;
+    padding: 9px 16px;
+
+    /* Typography */
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    /* Look — default (Admin) */
+    background: linear-gradient(135deg, #fdf2f8, #fce7f3);
+    color: #be185d;
+    border: 1px solid #fbcfe8;
+    border-radius: 10px;
+
+    /* Soft shadow */
+    box-shadow: 0 2px 6px rgba(190, 24, 93, 0.08);
+
+    /* Smooth hover */
+    transition: all 0.2s ease;
+}
+
+.sidebar-role-badge i {
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.sidebar-role-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(190, 24, 93, 0.15);
+}
+
+
+/* ==========================================
+   ROLE-SPECIFIC COLOR VARIANTS
+========================================== */
+
+/* 👑 Admin — Pink */
+body.role-admin .sidebar-role-badge,
+.sidebar-role-badge:has(i.fa-shield-halved) {
+    background: linear-gradient(135deg, #fdf2f8, #fce7f3);
+    color: #be185d;
+    border-color: #fbcfe8;
+}
+
+/* 👔 Manager — Purple */
+body.role-manager .sidebar-role-badge {
+    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    color: #6d28d9;
+    border-color: #c4b5fd;
+    box-shadow: 0 2px 6px rgba(109, 40, 217, 0.08);
+}
+
+body.role-manager .sidebar-role-badge:hover {
+    box-shadow: 0 4px 12px rgba(109, 40, 217, 0.15);
+}
+
+/* 👩‍⚕️ Caregiver — Teal */
+body.role-caregiver .sidebar-role-badge {
+    background: linear-gradient(135deg, #ecfeff, #cffafe);
+    color: #0e7490;
+    border-color: #a5f3fc;
+    box-shadow: 0 2px 6px rgba(14, 116, 144, 0.08);
+}
+
+body.role-caregiver .sidebar-role-badge:hover {
+    box-shadow: 0 4px 12px rgba(14, 116, 144, 0.15);
+}
+
+/* 👨‍⚕️ Healthcare — Green */
+body.role-healthcare .sidebar-role-badge {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    color: #15803d;
+    border-color: #86efac;
+    box-shadow: 0 2px 6px rgba(21, 128, 61, 0.08);
+}
+
+body.role-healthcare .sidebar-role-badge:hover {
+    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.15);
+}
+
+
+/* ==========================================
+   MOBILE TWEAK
+========================================== */
+@media (max-width: 640px) {
+    .sidebar-role-badge {
+        margin: 0 14px 18px;
+        padding: 8px 14px;
+        font-size: 10px;
+        letter-spacing: 0.6px;
+    }
+}

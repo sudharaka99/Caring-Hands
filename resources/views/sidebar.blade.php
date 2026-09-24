@@ -3,6 +3,51 @@
 
     // Prevent error if $menus is not passed
     $menus = $menus ?? collect();
+
+    // ==========================================
+    // ROLE-AWARE DASHBOARD ROUTE
+    // ==========================================
+    $dashboardRouteName = Route::has($currentRole . '.dashboard')
+        ? $currentRole . '.dashboard'
+        : 'admin.dashboard';
+
+    $dashboardUrl = route($dashboardRouteName);
+
+    // ==========================================
+    // ROLE LABELS
+    // ==========================================
+    $roleLabels = [
+        'admin'      => ['Admin Panel',      'fa-shield-halved'],
+        'manager'    => ['Manager Panel',    'fa-user-tie'],
+        'caregiver'  => ['Caregiver Panel',  'fa-user-nurse'],
+        'healthcare' => ['Healthcare Panel', 'fa-user-doctor'],
+    ];
+
+    [$roleLabel, $roleIcon] = $roleLabels[$currentRole]
+        ?? [ucfirst($currentRole) . ' Panel', 'fa-user'];
+
+    // ==========================================
+    // HELPER — resolve role-specific route
+    // Swaps 'admin.' prefix to current role if
+    // the role-specific route exists.
+    // ==========================================
+    $resolveRoute = function ($routeName) use ($currentRole) {
+        if (!$routeName) return null;
+
+        // Admin uses routes as-is
+        if ($currentRole === 'admin') {
+            return Route::has($routeName) ? $routeName : null;
+        }
+
+        // Other roles: swap 'admin.' → '{role}.'
+        $swapped = preg_replace('/^admin\./', $currentRole . '.', $routeName);
+
+        if ($swapped && Route::has($swapped)) {
+            return $swapped;
+        }
+
+        return null;
+    };
 @endphp
 
 <aside class="admin-sidebar" id="adminSidebar">
@@ -11,10 +56,18 @@
          LOGO
     =========================================== -->
     <div class="sidebar-logo">
-        <a href="{{ route('admin.dashboard') }}">
-            <img src="{{ asset('images/logo.png') }}"
-                 alt="Caring Hands">
+        <a href="{{ $dashboardUrl }}">
+            <img src="{{ asset('images/logo.png') }}" alt="Caring Hands">
         </a>
+    </div>
+
+
+    <!-- ==========================================
+         ROLE BADGE
+    =========================================== -->
+    <div class="sidebar-role-badge">
+        <i class="fa-solid {{ $roleIcon }}"></i>
+        {{ $roleLabel }}
     </div>
 
 
@@ -23,18 +76,14 @@
     =========================================== -->
     <nav class="sidebar-nav">
 
-        <span class="sidebar-menu-title">
-            MAIN MENU
-        </span>
+        <span class="sidebar-menu-title">MAIN MENU</span>
 
 
-        <!-- Dashboard -->
-        <a href="{{ route('admin.dashboard') }}"
-           class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-
+        <!-- Dashboard (role-aware) -->
+        <a href="{{ $dashboardUrl }}"
+           class="sidebar-link {{ request()->routeIs($currentRole . '.dashboard') ? 'active' : '' }}">
             <i class="fa-solid fa-table-columns"></i>
             <span>Dashboard</span>
-
         </a>
 
 
@@ -45,9 +94,8 @@
 
             @php
 
-                // Get children that current role can access
+                // Filter children by current role
                 $children = $menu->children->filter(function ($child) use ($currentRole) {
-
                     $access = $child->accesses
                         ->where('role', $currentRole)
                         ->first();
@@ -55,29 +103,37 @@
                     return $child->status === 'active'
                         && $access
                         && $access->can_view;
-
                 });
 
                 $hasChildren = $children->isNotEmpty();
 
+                // Resolve parent route for current role
+                $parentRouteName = $resolveRoute($menu->route);
+                $parentUrl       = $parentRouteName ? route($parentRouteName) : '#';
 
-                // Check if parent route is active
-                $isParentActive = $menu->route
-                    && request()->routeIs($menu->route);
+                $isParentActive = $parentRouteName
+                    && request()->routeIs($parentRouteName);
 
-
-                // Check if any child route is active
-                $hasActiveChild = $children->contains(function ($child) {
-
-                    return $child->route
-                        && request()->routeIs($child->route);
-
+                // Check active child
+                $hasActiveChild = $children->contains(function ($child) use ($resolveRoute) {
+                    $r = $resolveRoute($child->route);
+                    return $r && request()->routeIs($r);
                 });
-
 
                 $isOpen = $isParentActive || $hasActiveChild;
 
+                // Skip menus the current role cannot access at all
+                $parentAccess = $menu->accesses
+                    ->where('role', $currentRole)
+                    ->first();
+
+                $canSeeParent = $parentAccess && $parentAccess->can_view;
+
             @endphp
+
+            @if(!$canSeeParent)
+                @continue
+            @endif
 
 
             <!-- ==========================================
@@ -92,13 +148,8 @@
                             onclick="toggleSidebarDropdown(this)">
 
                         <div class="sidebar-link-left">
-
                             <i class="{{ $menu->icon ?: 'fa-solid fa-folder' }}"></i>
-
-                            <span>
-                                {{ $menu->name }}
-                            </span>
-
+                            <span>{{ $menu->name }}</span>
                         </div>
 
                         <i class="fa-solid fa-chevron-down sidebar-arrow"></i>
@@ -112,21 +163,17 @@
                         @foreach($children as $child)
 
                             @php
-                                $childUrl = '#';
-
-                                if ($child->route && Route::has($child->route)) {
-                                    $childUrl = route($child->route);
-                                }
+                                $childRouteName = $resolveRoute($child->route);
+                                $childUrl       = $childRouteName ? route($childRouteName) : '#';
+                                $childActive    = $childRouteName
+                                    && request()->routeIs($childRouteName);
                             @endphp
 
                             <a href="{{ $childUrl }}"
-                               class="sidebar-sublink {{ $child->route && request()->routeIs($child->route) ? 'active' : '' }}">
+                               class="sidebar-sublink {{ $childActive ? 'active' : '' }}">
 
                                 <i class="{{ $child->icon ?: 'fa-solid fa-circle' }}"></i>
-
-                                <span>
-                                    {{ $child->name }}
-                                </span>
+                                <span>{{ $child->name }}</span>
 
                             </a>
 
@@ -138,26 +185,15 @@
 
 
             <!-- ==========================================
-                 NORMAL MENU
+                 NORMAL MENU (no children)
             =========================================== -->
             @else
 
-                @php
-                    $menuUrl = '#';
-
-                    if ($menu->route && Route::has($menu->route)) {
-                        $menuUrl = route($menu->route);
-                    }
-                @endphp
-
-                <a href="{{ $menuUrl }}"
+                <a href="{{ $parentUrl }}"
                    class="sidebar-link {{ $isParentActive ? 'active' : '' }}">
 
                     <i class="{{ $menu->icon ?: 'fa-solid fa-circle' }}"></i>
-
-                    <span>
-                        {{ $menu->name }}
-                    </span>
+                    <span>{{ $menu->name }}</span>
 
                 </a>
 
@@ -167,32 +203,22 @@
 
 
         <!-- ==========================================
-             SYSTEM - ADMIN ONLY
+             SYSTEM — ADMIN ONLY
         =========================================== -->
         @if($currentRole === 'admin')
 
-            <span class="sidebar-menu-title">
-                SYSTEM
-            </span>
-
+            <span class="sidebar-menu-title">SYSTEM</span>
 
             <a href="{{ route('admin.menus.index') }}"
                class="sidebar-link {{ request()->routeIs('admin.menus.*') ? 'active' : '' }}">
-
                 <i class="fa-solid fa-bars"></i>
-
                 <span>Menu Management</span>
-
             </a>
-
 
             <a href="{{ route('admin.menu-access.index') }}"
                class="sidebar-link {{ request()->routeIs('admin.menu-access.*') ? 'active' : '' }}">
-
                 <i class="fa-solid fa-user-shield"></i>
-
                 <span>Menu Access</span>
-
             </a>
 
         @endif
@@ -209,17 +235,9 @@
             {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
         </div>
 
-
         <div class="sidebar-user-info">
-
-            <strong>
-                {{ auth()->user()->name ?? 'Administrator' }}
-            </strong>
-
-            <span>
-                {{ ucfirst($currentRole) }}
-            </span>
-
+            <strong>{{ auth()->user()->name ?? 'User' }}</strong>
+            <span>{{ ucfirst($currentRole) }}</span>
         </div>
 
     </div>
@@ -227,19 +245,26 @@
 </aside>
 
 
-<!-- Mobile Overlay -->
-<div class="sidebar-overlay"
-     id="sidebarOverlay"
-     onclick="toggleAdminSidebar()">
-</div>
+<!-- ==========================================
+     MOBILE OVERLAY — only include if layout
+     does NOT already provide one
+========================================== -->
+@once
+    <div class="sidebar-overlay"
+         id="sidebarOverlay"
+         onclick="toggleAdminSidebar()">
+    </div>
+@endonce
 
 
 <script>
-    function toggleSidebarDropdown(button) {
-        const dropdown = button.closest('.sidebar-dropdown');
-
-        if (dropdown) {
-            dropdown.classList.toggle('open');
-        }
+    // Dropdown toggle — safe to redeclare (checks existence)
+    if (typeof toggleSidebarDropdown !== 'function') {
+        window.toggleSidebarDropdown = function (button) {
+            const dropdown = button.closest('.sidebar-dropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('open');
+            }
+        };
     }
 </script>
