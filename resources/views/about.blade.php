@@ -3,6 +3,10 @@
 @section('title', 'About Us - Caring Hands')
 
 @section('content')
+
+    {{-- ==========================================
+         PAGE HEADER
+    =========================================== --}}
     <section class="section" style="padding-top: 150px;">
         <div class="container">
             <div class="section-title">
@@ -12,15 +16,29 @@
             </div>
         </div>
     </section>
-    
+
+
+    {{-- ==========================================
+         ABOUT SECTION (from partial)
+    =========================================== --}}
     @include('components.sections.about')
-    
-    <section class="section section-light">
+
+
+    {{-- ==========================================
+         OUR MISSION
+    =========================================== --}}
+    <section class="section" style="background: #F8F9FC;">
         <div class="container">
             <div class="section-title">
-                <h2>Our Mission</h2>
-                <p>To provide a seamless, secure, and compassionate elder home management experience for all stakeholders.</p>
+                <span class="section-tag">Our Mission</span>
+                <h2>Compassion Meets Technology</h2>
+                <p>
+                    To provide a seamless, secure, and compassionate elder home
+                    management experience for residents, families, caregivers,
+                    and healthcare professionals alike.
+                </p>
             </div>
         </div>
     </section>
+
 @endsection
