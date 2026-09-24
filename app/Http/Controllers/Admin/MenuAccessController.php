@@ -89,7 +89,7 @@ class MenuAccessController extends Controller
         }
 
         return redirect()
-            ->route('admin.menu-access.index')
+            ->route('admin.dashboard')
             ->with(
                 'success',
                 'Menu access permissions updated successfully.'

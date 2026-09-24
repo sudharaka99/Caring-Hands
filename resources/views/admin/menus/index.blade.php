@@ -65,7 +65,7 @@
                         <tr>
 
                             <td>
-                                {{ $loop->iteration }}
+                                {{ $Getmenus->firstItem() + $loop->index }}
                             </td>
 
 
@@ -204,6 +204,12 @@
             </table>
 
         </div>
+
+        @if($Getmenus->hasPages())
+            <div class="pagination-wrapper">
+                {{ $Getmenus->withQueryString()->links() }}
+            </div>
+        @endif
 
     </div>
 

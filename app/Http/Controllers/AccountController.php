@@ -32,12 +32,11 @@ class AccountController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the request
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'nullable|in:admin,manager,caregiver,healthcare',
+            'role'     => 'nullable|in:admin,manager,caregiver,healthcare,owner',
         ]);
 
         if ($validator->fails()) {
@@ -50,12 +49,12 @@ class AccountController extends Controller
         DB::beginTransaction();
 
         try {
-            // Create user
             $userId = DB::table('users')->insertGetId([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => $request->role ?? 'caregiver',
+                'name'       => $request->name,
+                'email'      => $request->email,
+                'password'   => Hash::make($request->password),
+                'role'       => $request->role ?? 'caregiver',
+                'status'     => 'active',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -64,8 +63,8 @@ class AccountController extends Controller
 
             Log::info('New user registered', [
                 'user_id' => $userId,
-                'email' => $request->email,
-                'role' => $request->role ?? 'caregiver'
+                'email'   => $request->email,
+                'role'    => $request->role ?? 'caregiver',
             ]);
 
             return redirect()
@@ -74,10 +73,10 @@ class AccountController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Registration failed', [
                 'error' => $e->getMessage(),
-                'email' => $request->email
+                'email' => $request->email,
             ]);
 
             return redirect()
@@ -92,9 +91,9 @@ class AccountController extends Controller
      */
     public function authenticate(Request $request)
     {
-        // Step 1: Validate login details
+        // Step 1: Validate
         $validator = Validator::make($request->all(), [
-            'email' => ['required', 'email'],
+            'email'    => ['required', 'email'],
             'password' => ['required'],
         ]);
 
@@ -106,16 +105,11 @@ class AccountController extends Controller
         }
 
         try {
-            // Step 2: Find user by email
-            $user = DB::table('users')
-                ->where('email', $request->email)
-                ->first();
+            // Step 2: Find user
+            $user = DB::table('users')->where('email', $request->email)->first();
 
-            // User not found
             if (!$user) {
-                Log::warning('Login failed: user not found', [
-                    'email' => $request->email
-                ]);
+                Log::warning('Login failed: user not found', ['email' => $request->email]);
 
                 return redirect()
                     ->route('login')
@@ -125,9 +119,7 @@ class AccountController extends Controller
 
             // Step 3: Check password
             if (!Hash::check($request->password, $user->password)) {
-                Log::warning('Login failed: incorrect password', [
-                    'email' => $request->email
-                ]);
+                Log::warning('Login failed: incorrect password', ['email' => $request->email]);
 
                 return redirect()
                     ->route('login')
@@ -135,13 +127,26 @@ class AccountController extends Controller
                     ->withInput($request->only('email'));
             }
 
-            // Step 4: Check valid role
-            $allowedRoles = ['admin', 'manager', 'caregiver', 'healthcare'];
+            // Step 4: Check status (if active)
+            if (isset($user->status) && $user->status !== 'active') {
+                Log::warning('Login failed: account not active', [
+                    'email'  => $user->email,
+                    'status' => $user->status,
+                ]);
+
+                return redirect()
+                    ->route('login')
+                    ->with('error', 'Your account is not active. Please contact admin.')
+                    ->withInput($request->only('email'));
+            }
+
+            // Step 5: Check valid role — ⭐ ADDED 'owner'
+            $allowedRoles = ['admin', 'manager', 'caregiver', 'healthcare', 'owner'];
 
             if (!in_array($user->role, $allowedRoles, true)) {
                 Log::warning('Login failed: invalid role', [
                     'email' => $user->email,
-                    'role' => $user->role,
+                    'role'  => $user->role,
                 ]);
 
                 return redirect()
@@ -149,30 +154,29 @@ class AccountController extends Controller
                     ->with('error', 'Your account does not have permission to access the system.');
             }
 
-            // Step 5: Login user
+            // Step 6: Login
             Auth::loginUsingId($user->id);
-
-            // Prevent session fixation
             $request->session()->regenerate();
 
             Log::info('User authenticated successfully', [
                 'email' => $user->email,
-                'role' => $user->role,
+                'role'  => $user->role,
             ]);
 
-            // Step 6: Redirect based on role
+            // Step 7: Redirect based on role — ⭐ ADDED 'owner'
             return match ($user->role) {
-                'admin' => redirect()->route('admin.dashboard'),
-                'manager' => redirect()->route('manager.dashboard'),
-                'caregiver' => redirect()->route('caregiver.dashboard'),
+                'admin'      => redirect()->route('admin.dashboard'),
+                'manager'    => redirect()->route('manager.dashboard'),
+                'caregiver'  => redirect()->route('caregiver.dashboard'),
                 'healthcare' => redirect()->route('healthcare.dashboard'),
-                default => redirect()->route('login')->with('error', 'Invalid user role.'),
+                'owner'      => redirect()->route('owner.dashboard'),      // ⭐ NEW
+                default      => redirect()->route('login')->with('error', 'Invalid user role.'),
             };
 
         } catch (\Exception $e) {
             Log::error('Authentication error', [
                 'message' => $e->getMessage(),
-                'email' => $request->email,
+                'email'   => $request->email,
             ]);
 
             return redirect()
@@ -188,14 +192,14 @@ class AccountController extends Controller
     public function logout(Request $request)
     {
         $user = Auth::user();
-        
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         Log::info('User logged out', [
             'user_id' => $user->id ?? null,
-            'email' => $user->email ?? null
+            'email'   => $user->email ?? null,
         ]);
 
         return redirect()
