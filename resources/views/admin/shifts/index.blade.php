@@ -315,10 +315,12 @@
             </p>
         </div>
 
-        <a href="{{ route('admin.shifts.create') }}" class="btn-add">
-            <i class="fa-solid fa-plus"></i>
-            Add Shift
-        </a>
+        @if(canAccess('admin.shifts.index', 'can_create'))
+            <a href="{{ route('admin.shifts.create') }}" class="btn-add">
+                <i class="fa-solid fa-plus"></i>
+                Add Shift
+            </a>
+        @endif
 
     </div>
 
@@ -521,21 +523,26 @@
 
                                 <div class="action-buttons">
 
-                                    <a href="{{ route('admin.shifts.show', $shift->id) }}"
-                                       class="action-btn btn-view"
-                                       title="View">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </a>
+                                    @if(canAccess('admin.shifts.index', 'can_view'))
+                                        <a href="{{ route('admin.shifts.show', $shift->id) }}"
+                                           class="action-btn btn-view"
+                                           title="View">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                    @endif
 
-                                    <a href="{{ route('admin.shifts.edit', $shift->id) }}"
-                                       class="action-btn btn-edit"
-                                       title="Edit">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </a>
+                                    @if(canAccess('admin.shifts.index', 'can_edit'))
+                                        <a href="{{ route('admin.shifts.edit', $shift->id) }}"
+                                           class="action-btn btn-edit"
+                                           title="Edit">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                    @endif
 
-                                    <form action="{{ route('admin.shifts.destroy', $shift->id) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('Are you sure you want to delete this shift?');">
+                                    @if(canAccess('admin.shifts.index', 'can_delete'))
+                                        <form action="{{ route('admin.shifts.destroy', $shift->id) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('Are you sure you want to delete this shift?');">
 
                                         @csrf
                                         @method('DELETE')
@@ -546,7 +553,8 @@
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
 
-                                    </form>
+                                        </form>
+                                    @endif
 
                                 </div>
 

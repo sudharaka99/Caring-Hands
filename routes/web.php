@@ -52,7 +52,7 @@ Route::middleware('auth')->group(function () {
     // ADMIN ROUTES (prefix: admin, name: admin.)
     // ==========================================
 
-    Route::middleware('role:admin,manager')
+    Route::middleware(['role:admin,manager', 'menu.permission'])
         ->prefix('admin')
         ->name('admin.')
         ->group(function () {

@@ -269,10 +269,12 @@
             <p>Manage medicines and prescriptions for elders</p>
         </div>
 
-        <a href="{{ route('admin.medication.create') }}" class="btn-add">
-            <i class="fa-solid fa-plus"></i>
-            Add Medication
-        </a>
+        @if(canAccess('admin.medication.index', 'can_create'))
+            <a href="{{ route('admin.medication.create') }}" class="btn-add">
+                <i class="fa-solid fa-plus"></i>
+                Add Medication
+            </a>
+        @endif
     </div>
 
     @if(session('success'))
@@ -500,21 +502,26 @@
 
                                 <div class="actions">
 
-                                    <a href="{{ route('admin.medication.show', $medication->id) }}"
-                                       class="action-btn view-btn"
-                                       title="View">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </a>
+                                    @if(canAccess('admin.medication.index', 'can_view'))
+                                        <a href="{{ route('admin.medication.show', $medication->id) }}"
+                                           class="action-btn view-btn"
+                                           title="View">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                    @endif
 
-                                    <a href="{{ route('admin.medication.edit', $medication->id) }}"
-                                       class="action-btn edit-btn"
-                                       title="Edit">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </a>
+                                    @if(canAccess('admin.medication.index', 'can_edit'))
+                                        <a href="{{ route('admin.medication.edit', $medication->id) }}"
+                                           class="action-btn edit-btn"
+                                           title="Edit">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                    @endif
 
-                                    <form action="{{ route('admin.medication.destroy', $medication->id) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('Are you sure you want to delete this medication?');">
+                                    @if(canAccess('admin.medication.index', 'can_delete'))
+                                        <form action="{{ route('admin.medication.destroy', $medication->id) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('Are you sure you want to delete this medication?');">
 
                                         @csrf
                                         @method('DELETE')
@@ -525,7 +532,8 @@
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
 
-                                    </form>
+                                        </form>
+                                    @endif
 
                                 </div>
 
@@ -542,10 +550,12 @@
 
                                 <p>No medications found.</p>
 
-                                <a href="{{ route('admin.medication.create') }}"
-                                   class="btn-add">
-                                    Add First Medication
-                                </a>
+                                @if(canAccess('admin.medication.index', 'can_create'))
+                                    <a href="{{ route('admin.medication.create') }}"
+                                       class="btn-add">
+                                        Add First Medication
+                                    </a>
+                                @endif
                             </td>
                         </tr>
 

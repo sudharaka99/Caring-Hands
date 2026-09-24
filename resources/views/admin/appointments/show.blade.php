@@ -361,13 +361,15 @@
 
         <div class="header-actions">
 
-            <a
-                href="{{ route('admin.appointments.edit', $appointment->id) }}"
-                class="btn btn-edit"
-            >
-                <i class="fa-solid fa-pen"></i>
-                Edit
-            </a>
+            @if(canAccess('admin.appointments.index', 'can_edit'))
+                <a
+                    href="{{ route('admin.appointments.edit', $appointment->id) }}"
+                    class="btn btn-edit"
+                >
+                    <i class="fa-solid fa-pen"></i>
+                    Edit
+                </a>
+            @endif
 
         </div>
 
@@ -697,11 +699,12 @@
                     Deleting this appointment cannot be undone.
                 </p>
 
-                <form
-                    action="{{ route('admin.appointments.destroy', $appointment->id) }}"
-                    method="POST"
-                    onsubmit="return confirm('Are you sure you want to permanently delete this appointment?');"
-                >
+                @if(canAccess('admin.appointments.index', 'can_delete'))
+                    <form
+                        action="{{ route('admin.appointments.destroy', $appointment->id) }}"
+                        method="POST"
+                        onsubmit="return confirm('Are you sure you want to permanently delete this appointment?');"
+                    >
 
                     @csrf
                     @method('DELETE')
@@ -711,7 +714,8 @@
                         Delete Appointment
                     </button>
 
-                </form>
+                    </form>
+                @endif
 
             </div>
 

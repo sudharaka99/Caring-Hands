@@ -27,16 +27,18 @@
                 Back
             </a>
 
-            <a
-                href="{{ route(
-                    'admin.healthcare.edit',
-                    $healthcare->id
-                ) }}"
-                class="btn btn-primary"
-            >
-                <i class="fa-solid fa-pen"></i>
-                Edit
-            </a>
+            @if(canAccess('admin.healthcare.index', 'can_edit'))
+                <a
+                    href="{{ route(
+                        'admin.healthcare.edit',
+                        $healthcare->id
+                    ) }}"
+                    class="btn btn-primary"
+                >
+                    <i class="fa-solid fa-pen"></i>
+                    Edit
+                </a>
+            @endif
 
         </div>
 

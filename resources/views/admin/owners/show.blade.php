@@ -24,14 +24,16 @@
 
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
 
-            <a href="{{ route('admin.owners.edit', $owner->id) }}"
-               class="btn btn-primary">
+                @if(canAccess('admin.owners.index', 'can_edit'))
+                     <a href="{{ route('admin.owners.edit', $owner->id) }}"
+                         class="btn btn-primary">
 
                 <i class="fa-solid fa-pen"></i>
 
                 Edit
 
-            </a>
+                </a>
+            @endif
 
             <button onclick="printProfile()"
                     class="btn btn-outline"
@@ -43,7 +45,8 @@
 
             </button>
 
-            <button onclick="deleteOwner({{ $owner->id }}, '{{ $owner->name }}')"
+                @if(canAccess('admin.owners.index', 'can_delete'))
+                <button onclick="deleteOwner({{ $owner->id }}, '{{ $owner->name }}')"
                     class="btn btn-outline"
                     style="border-color: #dc3545; color: #dc3545;">
 
@@ -51,7 +54,8 @@
 
                 Delete
 
-            </button>
+                </button>
+            @endif
 
             <a href="{{ route('admin.owners.index') }}"
                class="btn btn-outline">
@@ -260,14 +264,16 @@
                             This owner is not linked to any elder yet.
                         </p>
 
-                        <a href="{{ route('admin.owners.edit', $owner->id) }}"
-                           class="btn btn-primary">
+                                @if(canAccess('admin.owners.index', 'can_edit'))
+                                     <a href="{{ route('admin.owners.edit', $owner->id) }}"
+                                         class="btn btn-primary">
 
                             <i class="fa-solid fa-link"></i>
 
                             Connect Elders
 
-                        </a>
+                            </a>
+                        @endif
 
                     </div>
 

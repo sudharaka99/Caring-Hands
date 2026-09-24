@@ -24,14 +24,16 @@
 
         <div style="display:flex; gap:10px;">
 
-            <a href="{{ route('admin.elders.edit', $elder->id) }}"
-                class="btn btn-primary">
+            @if(canAccess('admin.elders.index', 'can_edit'))
+                <a href="{{ route('admin.elders.edit', $elder->id) }}"
+                    class="btn btn-primary">
 
                 <i class="fa-solid fa-pen"></i>
 
                 Edit
 
-            </a>
+                </a>
+            @endif
 
             <a href="{{ route('admin.elders.index') }}"
                 class="btn btn-outline">

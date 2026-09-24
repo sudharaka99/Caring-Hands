@@ -290,13 +290,15 @@
             </p>
         </div>
 
-        <a href="{{ route('admin.attendance.create') }}"
-           class="btn-add">
+          @if(canAccess('admin.attendance.index', 'can_create'))
+                <a href="{{ route('admin.attendance.create') }}"
+                    class="btn-add">
 
             <i class="fa-solid fa-plus"></i>
             Record Attendance
 
-        </a>
+            </a>
+        @endif
 
     </div>
 
@@ -577,27 +579,32 @@
 
                                 <div class="action-buttons">
 
-                                    <a href="{{ route('admin.attendance.show', $attendance->id) }}"
-                                       class="action-btn view"
-                                       title="View">
+                                                @if(canAccess('admin.attendance.index', 'can_view'))
+                                                     <a href="{{ route('admin.attendance.show', $attendance->id) }}"
+                                                         class="action-btn view"
+                                                         title="View">
 
                                         <i class="fa-solid fa-eye"></i>
 
-                                    </a>
+                                        </a>
+                                    @endif
 
 
-                                    <a href="{{ route('admin.attendance.edit', $attendance->id) }}"
-                                       class="action-btn edit"
-                                       title="Edit">
+                                                @if(canAccess('admin.attendance.index', 'can_edit'))
+                                                     <a href="{{ route('admin.attendance.edit', $attendance->id) }}"
+                                                         class="action-btn edit"
+                                                         title="Edit">
 
                                         <i class="fa-solid fa-pen"></i>
 
-                                    </a>
+                                        </a>
+                                    @endif
 
 
-                                    <form action="{{ route('admin.attendance.destroy', $attendance->id) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('Delete this attendance record?');">
+                                    @if(canAccess('admin.attendance.index', 'can_delete'))
+                                        <form action="{{ route('admin.attendance.destroy', $attendance->id) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('Delete this attendance record?');">
 
                                         @csrf
                                         @method('DELETE')
@@ -609,7 +616,8 @@
 
                                         </button>
 
-                                    </form>
+                                        </form>
+                                    @endif
 
                                 </div>
 

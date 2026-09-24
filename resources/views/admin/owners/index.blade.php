@@ -21,14 +21,16 @@
             </p>
         </div>
 
-        <a href="{{ route('admin.owners.create') }}"
-           class="btn btn-primary">
+          @if(canAccess('admin.owners.index', 'can_create'))
+                <a href="{{ route('admin.owners.create') }}"
+                    class="btn btn-primary">
 
             <i class="fa-solid fa-user-plus"></i>
 
             Add Owner
 
-        </a>
+            </a>
+        @endif
 
     </div>
 
@@ -360,31 +362,37 @@
 
                                 <div class="elder-actions">
 
-                                    <a href="{{ route('admin.owners.show', $owner->id) }}"
-                                       class="action-btn view"
-                                       title="View Owner">
+                                                @if(canAccess('admin.owners.index', 'can_view'))
+                                                     <a href="{{ route('admin.owners.show', $owner->id) }}"
+                                                         class="action-btn view"
+                                                         title="View Owner">
 
                                         <i class="fa-solid fa-eye"></i>
 
-                                    </a>
+                                        </a>
+                                    @endif
 
 
-                                    <a href="{{ route('admin.owners.edit', $owner->id) }}"
-                                       class="action-btn edit"
-                                       title="Edit Owner">
+                                                @if(canAccess('admin.owners.index', 'can_edit'))
+                                                     <a href="{{ route('admin.owners.edit', $owner->id) }}"
+                                                         class="action-btn edit"
+                                                         title="Edit Owner">
 
                                         <i class="fa-solid fa-pen"></i>
 
-                                    </a>
+                                        </a>
+                                    @endif
 
 
-                                    <button class="action-btn delete"
+                                        @if(canAccess('admin.owners.index', 'can_delete'))
+                                        <button class="action-btn delete"
                                             onclick="confirmDelete({{ $owner->id }}, '{{ $owner->name }}')"
                                             title="Delete Owner">
 
                                         <i class="fa-solid fa-trash"></i>
 
-                                    </button>
+                                        </button>
+                                    @endif
 
                                 </div>
 
@@ -409,14 +417,16 @@
                                         connect them with an elder.
                                     </p>
 
-                                    <a href="{{ route('admin.owners.create') }}"
-                                       class="btn btn-primary">
+                                                @if(canAccess('admin.owners.index', 'can_create'))
+                                                     <a href="{{ route('admin.owners.create') }}"
+                                                         class="btn btn-primary">
 
                                         <i class="fa-solid fa-user-plus"></i>
 
                                         Add Owner
 
-                                    </a>
+                                        </a>
+                                    @endif
 
                                 </div>
 

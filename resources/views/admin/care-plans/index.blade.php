@@ -305,13 +305,15 @@
             </p>
         </div>
 
-        <a href="{{ route('admin.care-plans.create') }}"
-           class="btn-add">
+          @if(canAccess('admin.care-plans.index', 'can_create'))
+                <a href="{{ route('admin.care-plans.create') }}"
+                    class="btn-add">
 
             <i class="fa-solid fa-plus"></i>
             Create Care Plan
 
-        </a>
+            </a>
+        @endif
 
     </div>
 
@@ -588,27 +590,32 @@
 
                                 <div class="action-buttons">
 
-                                    <a href="{{ route('admin.care-plans.show', $carePlan->id) }}"
-                                       class="action-btn view"
-                                       title="View">
+                                                @if(canAccess('admin.care-plans.index', 'can_view'))
+                                                     <a href="{{ route('admin.care-plans.show', $carePlan->id) }}"
+                                                         class="action-btn view"
+                                                         title="View">
 
                                         <i class="fa-solid fa-eye"></i>
 
-                                    </a>
+                                        </a>
+                                    @endif
 
 
-                                    <a href="{{ route('admin.care-plans.edit', $carePlan->id) }}"
-                                       class="action-btn edit"
-                                       title="Edit">
+                                                @if(canAccess('admin.care-plans.index', 'can_edit'))
+                                                     <a href="{{ route('admin.care-plans.edit', $carePlan->id) }}"
+                                                         class="action-btn edit"
+                                                         title="Edit">
 
                                         <i class="fa-solid fa-pen"></i>
 
-                                    </a>
+                                        </a>
+                                    @endif
 
 
-                                    <form action="{{ route('admin.care-plans.destroy', $carePlan->id) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('Are you sure you want to delete this care plan?');">
+                                    @if(canAccess('admin.care-plans.index', 'can_delete'))
+                                        <form action="{{ route('admin.care-plans.destroy', $carePlan->id) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('Are you sure you want to delete this care plan?');">
 
                                         @csrf
                                         @method('DELETE')
@@ -620,7 +627,8 @@
 
                                         </button>
 
-                                    </form>
+                                        </form>
+                                    @endif
 
                                 </div>
 

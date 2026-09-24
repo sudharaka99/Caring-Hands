@@ -22,14 +22,16 @@
 
         </div>
 
-        <a href="{{ route('admin.elders.create') }}"
-           class="btn btn-primary">
+          @if(canAccess('admin.elders.index', 'can_create'))
+                <a href="{{ route('admin.elders.create') }}"
+                    class="btn btn-primary">
 
             <i class="fa-solid fa-plus"></i>
 
             Add Elder
 
-        </a>
+            </a>
+        @endif
 
     </div>
 
@@ -240,27 +242,33 @@
 
                         <td>
 
-                            <a href="{{ route('admin.elders.show', $elder->id) }}"
-                               class="action-btn view">
+                                     @if(canAccess('admin.elders.index', 'can_view'))
+                                          <a href="{{ route('admin.elders.show', $elder->id) }}"
+                                              class="action-btn view">
 
                                 <i class="fa-solid fa-eye"></i>
 
-                            </a>
+                                </a>
+                            @endif
 
-                            <a href="{{ route('admin.elders.edit', $elder->id) }}"
-                               class="action-btn edit">
+                                     @if(canAccess('admin.elders.index', 'can_edit'))
+                                          <a href="{{ route('admin.elders.edit', $elder->id) }}"
+                                              class="action-btn edit">
 
                                 <i class="fa-solid fa-pen"></i>
 
-                            </a>
+                                </a>
+                            @endif
 
-                            <button type="button"
+                                @if(canAccess('admin.elders.index', 'can_delete'))
+                                <button type="button"
                                     class="action-btn delete"
                                     onclick="confirmElderDelete({{ $elder->id }})">
 
                                 <i class="fa-solid fa-trash"></i>
 
-                            </button>
+                                </button>
+                            @endif
 
                         </td>
 

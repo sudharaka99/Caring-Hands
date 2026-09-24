@@ -217,13 +217,15 @@
             </a>
 
 
-            <a href="{{ route('admin.care-plans.edit', $carePlan->id) }}"
-               class="btn edit">
+                @if(canAccess('admin.care-plans.index', 'can_edit'))
+                     <a href="{{ route('admin.care-plans.edit', $carePlan->id) }}"
+                         class="btn edit">
 
                 <i class="fa-solid fa-pen"></i>
                 Edit
 
-            </a>
+                </a>
+            @endif
 
         </div>
 

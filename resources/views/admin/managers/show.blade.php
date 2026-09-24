@@ -34,19 +34,21 @@
             </a>
 
 
-            <a
-                href="{{ route(
-                    'admin.managers.edit',
-                    $manager->id
-                ) }}"
-                class="btn btn-primary"
-            >
+            @if(canAccess('admin.managers.index', 'can_edit'))
+                <a
+                    href="{{ route(
+                        'admin.managers.edit',
+                        $manager->id
+                    ) }}"
+                    class="btn btn-primary"
+                >
 
                 <i class="fa-solid fa-pen"></i>
 
                 Edit
 
-            </a>
+                </a>
+            @endif
 
         </div>
 

@@ -14,9 +14,11 @@
             <a href="{{ route('admin.caregivers.index') }}" class="btn btn-outline">
                 <i class="fa-solid fa-arrow-left"></i> Back
             </a>
-            <a href="{{ route('admin.caregivers.edit', $caregiver->id) }}" class="btn btn-primary">
-                <i class="fa-solid fa-pen"></i> Edit
-            </a>
+            @if(canAccess('admin.caregivers.index', 'can_edit'))
+                <a href="{{ route('admin.caregivers.edit', $caregiver->id) }}" class="btn btn-primary">
+                    <i class="fa-solid fa-pen"></i> Edit
+                </a>
+            @endif
         </div>
     </div>
 

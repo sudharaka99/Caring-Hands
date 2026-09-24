@@ -213,13 +213,15 @@
 
             </a>
 
-            <a href="{{ route('admin.shifts.edit', $shift->id) }}"
-               class="btn btn-edit">
+                @if(canAccess('admin.shifts.index', 'can_edit'))
+                     <a href="{{ route('admin.shifts.edit', $shift->id) }}"
+                         class="btn btn-edit">
 
                 <i class="fa-solid fa-pen"></i>
                 Edit
 
-            </a>
+                </a>
+            @endif
 
         </div>
 

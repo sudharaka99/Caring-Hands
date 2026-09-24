@@ -555,11 +555,12 @@
 
             <div class="form-actions">
 
-                <form
-                    action="{{ route('admin.appointments.destroy', $appointment->id) }}"
-                    method="POST"
-                    onsubmit="return confirm('Are you sure you want to delete this appointment?');"
-                >
+                @if(canAccess('admin.appointments.index', 'can_delete'))
+                    <form
+                        action="{{ route('admin.appointments.destroy', $appointment->id) }}"
+                        method="POST"
+                        onsubmit="return confirm('Are you sure you want to delete this appointment?');"
+                    >
                     @csrf
                     @method('DELETE')
 
@@ -567,7 +568,8 @@
                         <i class="fa-solid fa-trash"></i>
                         Delete
                     </button>
-                </form>
+                    </form>
+                @endif
 
                 <div class="right-actions">
 

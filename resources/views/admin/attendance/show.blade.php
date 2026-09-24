@@ -196,13 +196,15 @@
             </a>
 
 
-            <a href="{{ route('admin.attendance.edit', $attendance->id) }}"
-               class="btn edit">
+                @if(canAccess('admin.attendance.index', 'can_edit'))
+                     <a href="{{ route('admin.attendance.edit', $attendance->id) }}"
+                         class="btn edit">
 
                 <i class="fa-solid fa-pen"></i>
                 Edit
 
-            </a>
+                </a>
+            @endif
 
         </div>
 

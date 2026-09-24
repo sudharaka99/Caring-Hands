@@ -372,13 +372,15 @@
             </a>
 
 
-            <a href="{{ route('admin.medication.edit', $medication->id) }}"
-               class="btn btn-edit">
+                @if(canAccess('admin.medication.index', 'can_edit'))
+                     <a href="{{ route('admin.medication.edit', $medication->id) }}"
+                         class="btn btn-edit">
 
                 <i class="fa-solid fa-pen"></i>
                 Edit Medication
 
-            </a>
+                </a>
+            @endif
 
         </div>
 
@@ -1126,9 +1128,10 @@
                 </p>
 
 
-                <form method="POST"
-                      action="{{ route('admin.medication.destroy', $medication->id) }}"
-                      onsubmit="return confirm('Are you sure you want to permanently delete this medication and all its administration records?');">
+                    @if(canAccess('admin.medication.index', 'can_delete'))
+                      <form method="POST"
+                          action="{{ route('admin.medication.destroy', $medication->id) }}"
+                          onsubmit="return confirm('Are you sure you want to permanently delete this medication and all its administration records?');">
 
                     @csrf
                     @method('DELETE')
@@ -1141,7 +1144,8 @@
 
                     </button>
 
-                </form>
+                    </form>
+                @endif
 
             </div>
 

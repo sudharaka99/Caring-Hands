@@ -511,13 +511,15 @@
 
         </div>
 
-        <a
-            href="{{ route('admin.appointments.create') }}"
-            class="btn-primary"
-        >
-            <i class="fa-solid fa-plus"></i>
-            Add Appointment
-        </a>
+        @if(canAccess('admin.appointments.index', 'can_create'))
+            <a
+                href="{{ route('admin.appointments.create') }}"
+                class="btn-primary"
+            >
+                <i class="fa-solid fa-plus"></i>
+                Add Appointment
+            </a>
+        @endif
 
     </div>
 
@@ -965,29 +967,34 @@
 
                                     <div class="action-buttons">
 
-                                        <a
-                                            href="{{ route('admin.appointments.show', $appointment->id) }}"
-                                            class="action-btn view-btn"
-                                            title="View"
-                                        >
-                                            <i class="fa-solid fa-eye"></i>
-                                        </a>
+                                        @if(canAccess('admin.appointments.index', 'can_view'))
+                                            <a
+                                                href="{{ route('admin.appointments.show', $appointment->id) }}"
+                                                class="action-btn view-btn"
+                                                title="View"
+                                            >
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                        @endif
 
 
-                                        <a
-                                            href="{{ route('admin.appointments.edit', $appointment->id) }}"
-                                            class="action-btn edit-btn"
-                                            title="Edit"
-                                        >
-                                            <i class="fa-solid fa-pen"></i>
-                                        </a>
+                                        @if(canAccess('admin.appointments.index', 'can_edit'))
+                                            <a
+                                                href="{{ route('admin.appointments.edit', $appointment->id) }}"
+                                                class="action-btn edit-btn"
+                                                title="Edit"
+                                            >
+                                                <i class="fa-solid fa-pen"></i>
+                                            </a>
+                                        @endif
 
 
-                                        <form
-                                            action="{{ route('admin.appointments.destroy', $appointment->id) }}"
-                                            method="POST"
-                                            onsubmit="return confirm('Are you sure you want to delete this appointment?');"
-                                        >
+                                        @if(canAccess('admin.appointments.index', 'can_delete'))
+                                            <form
+                                                action="{{ route('admin.appointments.destroy', $appointment->id) }}"
+                                                method="POST"
+                                                onsubmit="return confirm('Are you sure you want to delete this appointment?');"
+                                            >
 
                                             @csrf
                                             @method('DELETE')
@@ -1000,7 +1007,8 @@
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
 
-                                        </form>
+                                            </form>
+                                        @endif
 
                                     </div>
 
@@ -1026,13 +1034,15 @@
                         There are no appointments matching your search.
                     </p>
 
-                    <a
-                        href="{{ route('admin.appointments.create') }}"
-                        class="btn-primary"
-                    >
-                        <i class="fa-solid fa-plus"></i>
-                        Add Appointment
-                    </a>
+                    @if(canAccess('admin.appointments.index', 'can_create'))
+                        <a
+                            href="{{ route('admin.appointments.create') }}"
+                            class="btn-primary"
+                        >
+                            <i class="fa-solid fa-plus"></i>
+                            Add Appointment
+                        </a>
+                    @endif
 
                 </div>
 
