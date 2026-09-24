@@ -151,6 +151,24 @@ Route::middleware('auth')->group(function () {
             Route::get('/medications/{id}/edit', [AdminController::class, 'medicationEdit'])->name('medication.edit');
             Route::put('/medications/{id}', [AdminController::class, 'medicationUpdate'])->name('medication.update');
             Route::delete('/medications/{id}', [AdminController::class, 'medicationDestroy'])->name('medication.destroy');
+
+            // --- Appointments ---
+            Route::get('/appointments', [AdminController::class, 'appointmentsIndex'])->name('appointments.index');
+            Route::get('/appointments/create', [AdminController::class, 'appointmentsCreate'])->name('appointments.create');
+            Route::post('/appointments', [AdminController::class, 'appointmentsStore'])->name('appointments.store');
+            Route::get('/appointments/{id}', [AdminController::class, 'appointmentsShow'])->name('appointments.show');
+            Route::get('/appointments/{id}/edit', [AdminController::class, 'appointmentsEdit'])->name('appointments.edit');
+            Route::put('/appointments/{id}', [AdminController::class, 'appointmentsUpdate'])->name('appointments.update');
+            Route::delete('/appointments/{id}', [AdminController::class, 'appointmentsDestroy'])->name('appointments.destroy');
+
+            // --- Reports ---
+            Route::get('/reports', [AdminController::class, 'reportsIndex'])->name('reports.index');
+            Route::get('/reports/elders', [AdminController::class, 'reportsElders'])->name('reports.elders');
+            Route::get('/reports/staff', [AdminController::class, 'reportsStaff'])->name('reports.staff');
+            Route::get('/reports/attendance', [AdminController::class, 'reportsAttendance'])->name('reports.attendance');
+            Route::get('/reports/care-plans', [AdminController::class, 'reportsCarePlans'])->name('reports.care-plans');
+            Route::get('/reports/medication', [AdminController::class, 'reportsMedication'])->name('reports.medication');
+            Route::get('/reports/appointments', [AdminController::class, 'reportsAppointments'])->name('reports.appointments');
         });
 
 
@@ -224,7 +242,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/elders', [HealthcareController::class, 'eldersIndex'])->name('elders.index');
             Route::get('/elders/{id}', [HealthcareController::class, 'eldersShow'])->name('elders.show');
 
-            // --- Care Plans (full CRUD except delete) ---
+            // --- Care Plans ---
             Route::get('/care-plans', [HealthcareController::class, 'carePlansIndex'])->name('care-plans.index');
             Route::get('/care-plans/create', [HealthcareController::class, 'carePlansCreate'])->name('care-plans.create');
             Route::post('/care-plans', [HealthcareController::class, 'carePlansStore'])->name('care-plans.store');
@@ -232,7 +250,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/care-plans/{id}/edit', [HealthcareController::class, 'carePlansEdit'])->name('care-plans.edit');
             Route::put('/care-plans/{id}', [HealthcareController::class, 'carePlansUpdate'])->name('care-plans.update');
 
-            // --- Medications (full CRUD except delete) ---
+            // --- Medications ---
             Route::get('/medications', [HealthcareController::class, 'medicationsIndex'])->name('medication.index');
             Route::get('/medications/create', [HealthcareController::class, 'medicationsCreate'])->name('medication.create');
             Route::post('/medications', [HealthcareController::class, 'medicationsStore'])->name('medication.store');
@@ -240,7 +258,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/medications/{id}/edit', [HealthcareController::class, 'medicationsEdit'])->name('medication.edit');
             Route::put('/medications/{id}', [HealthcareController::class, 'medicationsUpdate'])->name('medication.update');
 
-            // --- Appointments (full CRUD except delete) ---
+            // --- Appointments ---
             Route::get('/appointments', [HealthcareController::class, 'appointmentsIndex'])->name('appointments.index');
             Route::get('/appointments/create', [HealthcareController::class, 'appointmentsCreate'])->name('appointments.create');
             Route::post('/appointments', [HealthcareController::class, 'appointmentsStore'])->name('appointments.store');
@@ -259,11 +277,9 @@ Route::middleware('auth')->group(function () {
         });
 
 
-            /*
-    |--------------------------------------------------------------------------
-    | OWNER ROUTES (prefix: owner, name: owner.)
-    |--------------------------------------------------------------------------
-    */
+    // ==========================================
+    // OWNER ROUTES (prefix: owner, name: owner.)
+    // ==========================================
 
     Route::middleware('role:owner')
         ->prefix('owner')
@@ -273,18 +289,18 @@ Route::middleware('auth')->group(function () {
             // Dashboard
             Route::get('/dashboard', [OwnerDashboard::class, 'dashboard'])->name('dashboard');
 
-            // Elders — only their own
+            // Elders — own only
             Route::get('/elders', [OwnerController::class, 'eldersIndex'])->name('elders.index');
             Route::get('/elders/{id}', [OwnerController::class, 'eldersShow'])->name('elders.show');
 
-            // Care Plans — view own elder's
+            // Care Plans — own elder's
             Route::get('/care-plans', [OwnerController::class, 'carePlansIndex'])->name('care-plans.index');
             Route::get('/care-plans/{id}', [OwnerController::class, 'carePlansShow'])->name('care-plans.show');
 
-            // Medications — view own elder's
+            // Medications — own elder's
             Route::get('/medications', [OwnerController::class, 'medicationsIndex'])->name('medication.index');
 
-            // Appointments — view own elder's
+            // Appointments — own elder's
             Route::get('/appointments', [OwnerController::class, 'appointmentsIndex'])->name('appointments.index');
 
             // Reports
@@ -294,41 +310,4 @@ Route::middleware('auth')->group(function () {
             Route::get('/messages', [OwnerController::class, 'messagesIndex'])->name('messages.index');
         });
 
-<<<<<<< HEAD
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    // Medications
-    Route::get('/medications',[AdminController::class, 'medicationIndex'])->name('medication.index');
-    Route::get('/medications/create',[AdminController::class, 'medicationCreate'])->name('medication.create');
-    Route::post('/medications',[AdminController::class, 'medicationStore'])->name('medication.store');
-    Route::get('/medications/{id}',[AdminController::class, 'medicationShow'])->name('medication.show');
-    Route::get('/medications/{id}/edit',[AdminController::class, 'medicationEdit'])->name('medication.edit');
-    Route::put('/medications/{id}',[AdminController::class, 'medicationUpdate'])->name('medication.update');
-    Route::delete('/medications/{id}',[AdminController::class, 'medicationDestroy'])->name('medication.destroy');
-});
-
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    // Appointments
-    Route::get('/appointments',[AdminController::class, 'appointmentsIndex'])->name('appointments.index');
-    Route::get('/appointments/create',[AdminController::class, 'appointmentsCreate'])->name('appointments.create');
-    Route::post('/appointments',[AdminController::class, 'appointmentsStore'])->name('appointments.store');
-    Route::get('/appointments/{id}',[AdminController::class, 'appointmentsShow'])->name('appointments.show');
-    Route::get('/appointments/{id}/edit',[AdminController::class, 'appointmentsEdit'])->name('appointments.edit');
-    Route::put('/appointments/{id}',[AdminController::class, 'appointmentsUpdate'])->name('appointments.update');
-    Route::delete('/appointments/{id}',[AdminController::class, 'appointmentsDestroy'])->name('appointments.destroy');
-});
-
-
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    // Reports
-    Route::get('/reports', [AdminController::class, 'reportsIndex'])->name('reports.index');
-    Route::get('/reports/elders', [AdminController::class, 'reportsElders'])->name('reports.elders');
-    Route::get('/reports/staff', [AdminController::class, 'reportsStaff'])->name('reports.staff');
-    Route::get('/reports/attendance', [AdminController::class, 'reportsAttendance'])->name('reports.attendance');
-    Route::get('/reports/care-plans', [AdminController::class, 'reportsCarePlans'])->name('reports.care-plans');
-    Route::get('/reports/medication', [AdminController::class, 'reportsMedication'])->name('reports.medication');
-    Route::get('/reports/appointments', [AdminController::class, 'reportsAppointments'])->name('reports.appointments');
-
-});
-=======
-});
->>>>>>> 151c426060e3d8bce257c80bb850799779e0d073
+});  
