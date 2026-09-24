@@ -53,6 +53,7 @@
                 <span>Total Elders</span>
 
                 <h3>{{ $totalElders ?? 0 }}</h3>
+                <small>Registered residents</small>
 
             </div>
 
@@ -70,6 +71,7 @@
                 <span>Active</span>
 
                 <h3>{{ $activeElders ?? 0 }}</h3>
+                <small>Currently active</small>
 
             </div>
 
@@ -87,6 +89,7 @@
                 <span>Male</span>
 
                 <h3>{{ $maleElders ?? 0 }}</h3>
+                <small>Male residents</small>
 
             </div>
 
@@ -104,6 +107,7 @@
                 <span>Female</span>
 
                 <h3>{{ $femaleElders ?? 0 }}</h3>
+                <small>Female residents</small>
 
             </div>
 

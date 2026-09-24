@@ -158,6 +158,26 @@
 
         </div>
 
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                <i class="fa-solid fa-calendar-plus"></i>
+            </div>
+
+            <div>
+
+                <span>Added This Month</span>
+
+                <h3>
+                    {{ $newManagersThisMonth }}
+                </h3>
+
+                <small>New manager records</small>
+
+            </div>
+
+        </div>
+
     </div>
 
 

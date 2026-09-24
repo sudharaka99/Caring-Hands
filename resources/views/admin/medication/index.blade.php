@@ -294,6 +294,7 @@
             <div>
                 <h3>{{ $totalMedications }}</h3>
                 <span>Total Medications</span>
+                <small>All prescriptions</small>
             </div>
         </div>
 
@@ -305,6 +306,7 @@
             <div>
                 <h3>{{ $activeMedications }}</h3>
                 <span>Active</span>
+                <small>Currently active</small>
             </div>
         </div>
 
@@ -316,6 +318,7 @@
             <div>
                 <h3>{{ $completedMedications }}</h3>
                 <span>Completed</span>
+                <small>Completed courses</small>
             </div>
         </div>
 
@@ -327,6 +330,7 @@
             <div>
                 <h3>{{ $stoppedMedications }}</h3>
                 <span>Stopped</span>
+                <small>Stopped courses</small>
             </div>
         </div>
 

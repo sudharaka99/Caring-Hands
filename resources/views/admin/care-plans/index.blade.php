@@ -346,6 +346,7 @@
             <div class="stat-info">
                 <h3>{{ $totalCarePlans }}</h3>
                 <span>Total Plans</span>
+                <small>All care plans</small>
             </div>
         </div>
 
@@ -358,6 +359,7 @@
             <div class="stat-info">
                 <h3>{{ $activeCarePlans }}</h3>
                 <span>Active</span>
+                <small>Currently active</small>
             </div>
         </div>
 
@@ -370,6 +372,7 @@
             <div class="stat-info">
                 <h3>{{ $draftCarePlans }}</h3>
                 <span>Draft</span>
+                <small>Awaiting completion</small>
             </div>
         </div>
 
@@ -382,6 +385,7 @@
             <div class="stat-info">
                 <h3>{{ $completedCarePlans }}</h3>
                 <span>Completed</span>
+                <small>Finished plans</small>
             </div>
         </div>
 

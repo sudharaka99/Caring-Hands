@@ -352,6 +352,7 @@
             <div class="stat-info">
                 <h3>{{ $totalShifts ?? 0 }}</h3>
                 <span>Total Shifts</span>
+                <small>All staff shifts</small>
             </div>
         </div>
 
@@ -364,6 +365,7 @@
             <div class="stat-info">
                 <h3>{{ $scheduledShifts ?? 0 }}</h3>
                 <span>Scheduled</span>
+                <small>Upcoming shifts</small>
             </div>
         </div>
 
@@ -376,6 +378,7 @@
             <div class="stat-info">
                 <h3>{{ $activeShifts ?? 0 }}</h3>
                 <span>Active</span>
+                <small>Currently in progress</small>
             </div>
         </div>
 
@@ -388,6 +391,7 @@
             <div class="stat-info">
                 <h3>{{ $completedShifts ?? 0 }}</h3>
                 <span>Completed</span>
+                <small>Finished shifts</small>
             </div>
         </div>
 

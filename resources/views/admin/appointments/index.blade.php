@@ -534,6 +534,7 @@
             </div>
 
             <h3>{{ $totalAppointments ?? 0 }}</h3>
+            <small>All appointments</small>
 
             <p>Total Appointments</p>
 
@@ -547,6 +548,7 @@
             </div>
 
             <h3>{{ $scheduledAppointments ?? 0 }}</h3>
+            <small>Upcoming visits</small>
 
             <p>Scheduled</p>
 
@@ -560,6 +562,7 @@
             </div>
 
             <h3>{{ $confirmedAppointments ?? 0 }}</h3>
+            <small>Confirmed visits</small>
 
             <p>Confirmed</p>
 
@@ -573,6 +576,7 @@
             </div>
 
             <h3>{{ $completedAppointments ?? 0 }}</h3>
+            <small>Finished visits</small>
 
             <p>Completed</p>
 
@@ -586,6 +590,7 @@
             </div>
 
             <h3>{{ $cancelledAppointments ?? 0 }}</h3>
+            <small>Cancelled visits</small>
 
             <p>Cancelled</p>
 

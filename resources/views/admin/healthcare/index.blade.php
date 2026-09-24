@@ -114,6 +114,16 @@
                 <h3>{{ $inactiveHealthcare }}</h3>
             </div>
         </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-calendar-plus"></i>
+            </div>
+            <div>
+                <span>Added This Month</span>
+                <h3>{{ $newHealthcareThisMonth }}</h3>
+                <small>New healthcare records</small>
+            </div>
+        </div>
 
     </div>
 

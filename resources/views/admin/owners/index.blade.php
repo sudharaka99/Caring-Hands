@@ -52,6 +52,7 @@
                 <span>Total Owners</span>
 
                 <h3>{{ $totalOwners ?? 0 }}</h3>
+                <small>Registered owners</small>
 
             </div>
 
@@ -69,6 +70,7 @@
                 <span>Active Owners</span>
 
                 <h3>{{ $activeOwners ?? 0 }}</h3>
+                <small>Currently active</small>
 
             </div>
 
@@ -86,6 +88,7 @@
                 <span>Guardians</span>
 
                 <h3>{{ $guardianCount ?? 0 }}</h3>
+                <small>Family guardians</small>
 
             </div>
 
@@ -103,6 +106,7 @@
                 <span>Linked Owners</span>
 
                 <h3>{{ $linkedOwners ?? 0 }}</h3>
+                <small>Linked to residents</small>
 
             </div>
 

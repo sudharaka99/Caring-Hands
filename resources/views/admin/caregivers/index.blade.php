@@ -78,6 +78,16 @@
                 <h3>{{ $inactiveCaregivers }}</h3>
             </div>
         </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-calendar-plus"></i>
+            </div>
+            <div>
+                <span>Added This Month</span>
+                <h3>{{ $newCaregiversThisMonth }}</h3>
+                <small>New caregiver records</small>
+            </div>
+        </div>
     </div>
 
     {{-- Caregiver Table --}}

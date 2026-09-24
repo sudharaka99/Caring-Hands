@@ -4371,6 +4371,14 @@ body.role-healthcare .sidebar-role-badge:hover {
     color: var(--admin-heading);
 }
 
+.admin-body .stat-card small {
+    display: block;
+    margin-top: 3px;
+    color: var(--admin-muted);
+    font-size: 11px;
+    line-height: 1.3;
+}
+
 .admin-body .report-title h1,
 .admin-body .section-title,
 .admin-body .table-header h3 {
@@ -4758,6 +4766,54 @@ body.role-healthcare .sidebar-role-badge:hover {
     border-radius: var(--admin-card-radius) !important;
 }
 
+/* Summary cards fill the available row instead of wrapping the fourth card. */
+.admin-body .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+    gap: 20px;
+}
+
+.admin-body .stats-grid > .stat-card,
+.admin-body .stats-grid > .dashboard-card.stat-card {
+    width: 100%;
+    min-width: 0;
+}
+
+.admin-body .stats-grid > .stat-card,
+.admin-body .stats-grid > .dashboard-card.stat-card {
+    min-height: 150px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+}
+
+.admin-body .stats-grid .stat-icon,
+.admin-body .stats-grid .stat-card .icon {
+    flex: 0 0 auto;
+    margin: 0 auto;
+}
+
+.admin-body .stats-grid .stat-info,
+.admin-body .stats-grid > .stat-card > div:last-child {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.admin-body .stats-grid .stat-info h3,
+.admin-body .stats-grid > .stat-card > h3 {
+    margin: 2px 0;
+    line-height: 1.1;
+}
+
+.admin-body .stats-grid .stat-info span,
+.admin-body .stats-grid > .stat-card > p {
+    text-align: center;
+}
+
 @media (max-width: 768px) {
     .admin-body .form-card .form-grid,
     .admin-body .content-card .form-grid,
@@ -4772,6 +4828,16 @@ body.role-healthcare .sidebar-role-badge:hover {
     .admin-body .form-section .full,
     .admin-body .form-section .full-width {
         grid-column: auto;
+    }
+
+    .admin-body .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .admin-body .stats-grid {
+        grid-template-columns: 1fr !important;
     }
 }
 

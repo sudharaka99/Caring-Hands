@@ -331,6 +331,7 @@
             <div class="stat-info">
                 <h3>{{ $totalAttendance }}</h3>
                 <span>Total</span>
+                <small>Attendance records</small>
             </div>
         </div>
 
@@ -343,6 +344,7 @@
             <div class="stat-info">
                 <h3>{{ $presentAttendance }}</h3>
                 <span>Present</span>
+                <small>Staff present</small>
             </div>
         </div>
 
@@ -355,6 +357,7 @@
             <div class="stat-info">
                 <h3>{{ $lateAttendance }}</h3>
                 <span>Late</span>
+                <small>Late arrivals</small>
             </div>
         </div>
 
@@ -367,6 +370,7 @@
             <div class="stat-info">
                 <h3>{{ $absentAttendance }}</h3>
                 <span>Absent</span>
+                <small>Absent staff</small>
             </div>
         </div>
 

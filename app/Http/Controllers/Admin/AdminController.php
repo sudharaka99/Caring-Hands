@@ -848,6 +848,10 @@ class AdminController extends Controller
             $q->where('status', 'inactive');
         })->count();
 
+        $newCaregiversThisMonth = Caregiver::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
 
         // ==========================================
         // MENU ACCESS
@@ -876,6 +880,7 @@ class AdminController extends Controller
             'totalCaregivers',
             'activeCaregivers',
             'inactiveCaregivers',
+            'newCaregiversThisMonth',
             'menus',
             'userRole'
         ));
@@ -1305,6 +1310,10 @@ class AdminController extends Controller
             $q->where('status', 'inactive');
         })->count();
 
+        $newHealthcareThisMonth = Healthcare::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
 
         // Menu Access
 
@@ -1331,6 +1340,7 @@ class AdminController extends Controller
             'totalHealthcare',
             'activeHealthcare',
             'inactiveHealthcare',
+            'newHealthcareThisMonth',
             'menus',
             'userRole'
         ));
@@ -1742,6 +1752,10 @@ class AdminController extends Controller
             $q->where('status', 'inactive');
         })->count();
 
+        $newManagersThisMonth = Manager::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
         // ==========================================
         // MENU ACCESS
         $userRole = auth()->user()->role ?? 'guest';
@@ -1760,6 +1774,7 @@ class AdminController extends Controller
             'totalManagers',
             'activeManagers',
             'inactiveManagers',
+            'newManagersThisMonth',
             'menus',
             'userRole'
         ));
