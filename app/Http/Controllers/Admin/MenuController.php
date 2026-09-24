@@ -23,7 +23,7 @@ class MenuController extends Controller
 
         $Getmenus = Menu::with('parent')
             ->orderBy('sort_order')
-            ->get();
+            ->paginate(10);
 
         return view('admin.menus.index', compact('Getmenus', 'menus', 'userRole'));
     }
