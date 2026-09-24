@@ -4019,3 +4019,774 @@ body.role-healthcare .sidebar-role-badge:hover {
         width: 100%;
     }
 }
+
+/* ==========================================
+   ADMIN THEME NORMALIZATION
+   Keep legacy page classes on one dashboard visual system.
+========================================== */
+
+.admin-body {
+    --admin-control-height: 42px;
+    --admin-radius: 10px;
+    --admin-card-radius: 18px;
+    --admin-shadow: 0 8px 24px rgba(37, 50, 75, 0.05);
+}
+
+.admin-body .admin-page,
+.admin-body .dashboard-page,
+.admin-body .med-page {
+    color: var(--admin-text);
+}
+
+.admin-body .page-header,
+.admin-body .dashboard-heading,
+.admin-body .med-header {
+    margin-bottom: 28px;
+}
+
+.admin-body .page-header h1,
+.admin-body .dashboard-heading h1,
+.admin-body .med-title h1 {
+    color: var(--admin-heading);
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.admin-body .page-header p,
+.admin-body .dashboard-subtitle,
+.admin-body .med-title p {
+    color: var(--admin-muted);
+}
+
+.admin-body .dashboard-card,
+.admin-body .content-card,
+.admin-body .dashboard-card.filter-card,
+.admin-body .med-card,
+.admin-body .profile-card {
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-card-radius);
+    background: var(--admin-white);
+    box-shadow: var(--admin-shadow);
+}
+
+.admin-body .content-card,
+.admin-body .med-card {
+    overflow: hidden;
+}
+
+.admin-body .dashboard-table,
+.admin-body .admin-table {
+    color: var(--admin-text);
+}
+
+.admin-body .dashboard-table th,
+.admin-body .admin-table thead th {
+    background: var(--admin-primary-light);
+    border-bottom: 1px solid var(--admin-border);
+    color: var(--admin-heading);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+}
+
+.admin-body .dashboard-table td,
+.admin-body .admin-table tbody td {
+    border-bottom-color: var(--admin-border);
+    color: var(--admin-text);
+}
+
+.admin-body .dashboard-table tbody tr:hover,
+.admin-body .admin-table tbody tr:hover {
+    background: #FFF9FA;
+}
+
+.admin-body .btn,
+.admin-body .btn-add,
+.admin-body .btn-edit,
+.admin-body .btn-delete,
+.admin-body .btn-view,
+.admin-body .btn-back,
+.admin-body .btn-success,
+.admin-body .btn-danger,
+.admin-body .btn-secondary {
+    min-height: var(--admin-control-height);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: 1px solid transparent;
+    border-radius: var(--admin-radius);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.admin-body .btn:hover,
+.admin-body .btn-add:hover,
+.admin-body .btn-edit:hover,
+.admin-body .btn-delete:hover,
+.admin-body .btn-view:hover,
+.admin-body .btn-back:hover,
+.admin-body .btn-success:hover,
+.admin-body .btn-danger:hover,
+.admin-body .btn-secondary:hover {
+    transform: translateY(-1px);
+}
+
+.admin-body .btn-primary,
+.admin-body .btn-add,
+.admin-body .form-actions .btn-primary {
+    background: var(--admin-primary) !important;
+    border-color: var(--admin-primary) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 16px rgba(255, 156, 169, .24);
+}
+
+.admin-body .btn-primary:hover,
+.admin-body .btn-add:hover,
+.admin-body .form-actions .btn-primary:hover {
+    background: var(--admin-primary-dark) !important;
+    border-color: var(--admin-primary-dark) !important;
+    color: #fff !important;
+}
+
+.admin-body .btn-outline,
+.admin-body .btn-back,
+.admin-body .btn-secondary,
+.admin-body .form-actions .btn-secondary {
+    background: #fff !important;
+    border-color: var(--admin-border) !important;
+    color: var(--admin-heading) !important;
+}
+
+.admin-body .btn-outline:hover,
+.admin-body .btn-back:hover,
+.admin-body .btn-secondary:hover,
+.admin-body .form-actions .btn-secondary:hover {
+    background: var(--admin-primary-light) !important;
+    border-color: var(--admin-primary) !important;
+    color: var(--admin-primary-dark) !important;
+}
+
+.admin-body .btn-danger,
+.admin-body .btn-delete {
+    background: #FFF0F2 !important;
+    border-color: #FFD5DB !important;
+    color: #D95368 !important;
+}
+
+.admin-body .btn-danger:hover,
+.admin-body .btn-delete:hover {
+    background: #D95368 !important;
+    border-color: #D95368 !important;
+    color: #fff !important;
+}
+
+.admin-body .btn-success {
+    background: var(--admin-teal-light) !important;
+    border-color: #BCE6E1 !important;
+    color: #378F88 !important;
+}
+
+.admin-body .btn-success:hover {
+    background: var(--admin-teal) !important;
+    border-color: var(--admin-teal) !important;
+    color: #fff !important;
+}
+
+.admin-body .btn-save,
+.admin-body .btn-update,
+.admin-body .btn-filter,
+.admin-body .btn-reset,
+.admin-body .btn.primary,
+.admin-body .btn.edit,
+.admin-body .btn.back {
+    min-height: var(--admin-control-height);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: 1px solid transparent;
+    border-radius: var(--admin-radius);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.admin-body .btn-save,
+.admin-body .btn-update,
+.admin-body .btn-filter,
+.admin-body .btn.primary {
+    background: var(--admin-primary) !important;
+    border-color: var(--admin-primary) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 16px rgba(255, 156, 169, .24);
+}
+
+.admin-body .btn-save:hover,
+.admin-body .btn-update:hover,
+.admin-body .btn-filter:hover,
+.admin-body .btn.primary:hover {
+    background: var(--admin-primary-dark) !important;
+    border-color: var(--admin-primary-dark) !important;
+    color: #fff !important;
+}
+
+.admin-body .btn-cancel,
+.admin-body .btn-reset,
+.admin-body .btn.secondary,
+.admin-body .btn.back {
+    background: #fff !important;
+    border-color: var(--admin-border) !important;
+    color: var(--admin-heading) !important;
+}
+
+.admin-body .btn-cancel:hover,
+.admin-body .btn-reset:hover,
+.admin-body .btn.secondary:hover,
+.admin-body .btn.back:hover {
+    background: var(--admin-primary-light) !important;
+    border-color: var(--admin-primary) !important;
+    color: var(--admin-primary-dark) !important;
+}
+
+.admin-body .btn.edit {
+    background: var(--admin-orange-light) !important;
+    border-color: #F3D6B2 !important;
+    color: #B47732 !important;
+}
+
+.admin-body .btn.edit:hover {
+    background: var(--admin-orange) !important;
+    border-color: var(--admin-orange) !important;
+    color: #fff !important;
+}
+
+.admin-body .btn-sm {
+    min-height: 34px;
+    padding: 8px 13px;
+    font-size: 12px;
+}
+
+.admin-body .action-btn,
+.admin-body .action-buttons .action-btn,
+.admin-body .actions .action-btn {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 3px 0 0;
+    border: 1px solid transparent;
+    border-radius: var(--admin-radius);
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
+}
+
+.admin-body .action-btn.view,
+.admin-body .action-btn.view-btn,
+.admin-body .action-btn.btn-view {
+    background: var(--admin-teal-light);
+    border-color: #BCE6E1;
+    color: #378F88;
+}
+
+.admin-body .action-btn.edit,
+.admin-body .action-btn.edit-btn,
+.admin-body .action-btn.btn-edit {
+    background: var(--admin-orange-light);
+    border-color: #F3D6B2;
+    color: #B47732;
+}
+
+.admin-body .action-btn.delete,
+.admin-body .action-btn.delete-btn,
+.admin-body .action-btn.btn-delete {
+    background: #FFF0F2;
+    border-color: #FFD5DB;
+    color: #D95368;
+}
+
+.admin-body .action-btn:hover,
+.admin-body .action-btn:focus-visible {
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.admin-body .action-btn.view:hover,
+.admin-body .action-btn.view-btn:hover,
+.admin-body .action-btn.btn-view:hover {
+    background: var(--admin-teal);
+    border-color: var(--admin-teal);
+    color: #fff;
+}
+
+.admin-body .action-btn.edit:hover,
+.admin-body .action-btn.edit-btn:hover,
+.admin-body .action-btn.btn-edit:hover {
+    background: var(--admin-orange);
+    border-color: var(--admin-orange);
+    color: #fff;
+}
+
+.admin-body .action-btn.delete:hover,
+.admin-body .action-btn.delete-btn:hover,
+.admin-body .action-btn.btn-delete:hover {
+    background: #D95368;
+    border-color: #D95368;
+    color: #fff;
+}
+
+.admin-body .stat-card {
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-card-radius);
+    background: var(--admin-white);
+    box-shadow: var(--admin-shadow);
+}
+
+.admin-body .stat-icon,
+.admin-body .user-avatar {
+    background: var(--admin-primary-light);
+    color: var(--admin-primary-dark);
+}
+
+.admin-body .stat-card h3,
+.admin-body .stat-card strong,
+.admin-body .user-cell strong {
+    color: var(--admin-heading);
+}
+
+.admin-body .report-title h1,
+.admin-body .section-title,
+.admin-body .table-header h3 {
+    color: var(--admin-heading) !important;
+}
+
+.admin-body .report-title p,
+.admin-body .summary-card span,
+.admin-body .stat-box span,
+.admin-body .report-link p {
+    color: var(--admin-muted) !important;
+}
+
+.admin-body .summary-card,
+.admin-body .report-link,
+.admin-body .stat-box,
+.admin-body .table-card {
+    border: 1px solid var(--admin-border) !important;
+    border-radius: var(--admin-card-radius) !important;
+    background: var(--admin-white) !important;
+    box-shadow: var(--admin-shadow) !important;
+}
+
+.admin-body .summary-icon,
+.admin-body .report-link-icon,
+.admin-body .stat-box.yellow,
+.admin-body .stat-box.black {
+    background: var(--admin-primary-light) !important;
+    color: var(--admin-primary-dark) !important;
+}
+
+.admin-body .print-btn,
+.admin-body .report-link .view-btn {
+    background: var(--admin-primary) !important;
+    border: 1px solid var(--admin-primary) !important;
+    border-radius: var(--admin-radius) !important;
+    color: #fff !important;
+}
+
+.admin-body .print-btn:hover,
+.admin-body .report-link .view-btn:hover {
+    background: var(--admin-primary-dark) !important;
+    border-color: var(--admin-primary-dark) !important;
+    color: #fff !important;
+}
+
+.admin-body .form-control,
+.admin-body .form-group input,
+.admin-body .form-group select,
+.admin-body .form-group textarea,
+.admin-body .filter-form select,
+.admin-body .search-box {
+    border-color: var(--admin-border);
+    border-radius: var(--admin-radius);
+    color: var(--admin-heading);
+    background: #fff;
+}
+
+.admin-body .form-control:focus,
+.admin-body .form-group input:focus,
+.admin-body .form-group select:focus,
+.admin-body .form-group textarea:focus,
+.admin-body .filter-form select:focus,
+.admin-body .search-box:focus-within {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(255, 156, 169, .14);
+    outline: none;
+}
+
+/* Create/edit pages use the same width and rhythm as Elder Management. */
+.admin-body .appointment-form-page,
+.admin-body .attendance-form-page,
+.admin-body .care-plan-form-page,
+.admin-body .shift-form-page,
+.admin-body .med-form-page,
+.admin-body .med-edit-page {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.admin-body .form-card,
+.admin-body .content-card.form-card,
+.admin-body .med-form-page .form-card,
+.admin-body .med-edit-page .form-card {
+    width: 100%;
+    max-width: none;
+    margin: 0 0 25px;
+    padding: 25px;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-card-radius);
+    background: var(--admin-white);
+    box-shadow: var(--admin-shadow);
+}
+
+.admin-body .form-card .form-grid,
+.admin-body .content-card .form-grid,
+.admin-body .form-section .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.admin-body .form-card .form-group,
+.admin-body .content-card .form-group,
+.admin-body .form-section .form-group {
+    min-width: 0;
+}
+
+.admin-body .form-card .form-group label,
+.admin-body .content-card .form-group label,
+.admin-body .form-section .form-group label {
+    margin-bottom: 8px;
+    color: var(--admin-heading);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.admin-body .form-card .form-control,
+.admin-body .content-card .form-control,
+.admin-body .form-section .form-control,
+.admin-body .form-card input:not([type="checkbox"]):not([type="radio"]),
+.admin-body .form-card select,
+.admin-body .form-card textarea {
+    min-height: 46px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 14px;
+}
+
+.admin-body .form-card textarea,
+.admin-body .content-card textarea,
+.admin-body .form-section textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.admin-body .form-card .full,
+.admin-body .form-card .full-width,
+.admin-body .content-card .full,
+.admin-body .content-card .full-width,
+.admin-body .form-section .full,
+.admin-body .form-section .full-width {
+    grid-column: 1 / -1;
+}
+
+.admin-body .med-form-page,
+.admin-body .med-edit-page {
+    background: transparent;
+}
+
+.admin-body .med-form-page .form-header,
+.admin-body .med-edit-page .page-header {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto 28px;
+}
+
+.admin-body .med-form-page .form-header h1,
+.admin-body .med-edit-page .page-header h1 {
+    color: var(--admin-heading) !important;
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.admin-body .med-form-page .form-card,
+.admin-body .med-edit-page .form-card {
+    display: block;
+    width: 100%;
+    max-width: none !important;
+    margin: 0 auto 25px;
+    padding: 25px !important;
+    box-sizing: border-box;
+}
+
+.admin-body .med-form-page .section-title,
+.admin-body .med-edit-page .section-title {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 46px;
+    box-sizing: border-box;
+    gap: 10px;
+    margin: 25px 0 20px;
+    padding: 0 0 10px;
+    border-bottom: 2px solid var(--admin-primary-light) !important;
+    color: var(--admin-heading) !important;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.admin-body .med-form-page .section-title:first-child,
+.admin-body .med-edit-page .section-title:first-child {
+    margin-top: 0;
+}
+
+.admin-body .med-form-page .section-title i,
+.admin-body .med-edit-page .section-title i {
+    flex: 0 0 auto;
+    color: var(--admin-primary-dark) !important;
+}
+
+.admin-body .med-edit-page .medicine-preview {
+    background: var(--admin-heading) !important;
+    border: 1px solid var(--admin-heading);
+    border-radius: var(--admin-card-radius);
+}
+
+.admin-body .med-edit-page .medicine-preview-icon {
+    background: var(--admin-primary-light) !important;
+    color: var(--admin-primary-dark) !important;
+}
+
+/* Legacy appointment, medication, and report shells. */
+.admin-body .appointment-page,
+.admin-body .med-page,
+.admin-body .med-show-page,
+.admin-body .report-page {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0;
+    background: transparent;
+}
+
+.admin-body .appointment-page .page-title h1,
+.admin-body .med-page .med-title h1,
+.admin-body .med-show-page .page-header h1,
+.admin-body .report-page h1,
+.admin-body .report-page .header h1 {
+    color: var(--admin-heading) !important;
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.admin-body .appointment-page .page-title p,
+.admin-body .med-page .med-title p,
+.admin-body .med-show-page .page-header p,
+.admin-body .report-page .report-title p,
+.admin-body .report-page .header p {
+    color: var(--admin-muted) !important;
+}
+
+.admin-body .appointment-page .stat-card,
+.admin-body .med-page .stat-card,
+.admin-body .report-page .summary-card,
+.admin-body .report-page .summary-box,
+.admin-body .report-page .box,
+.admin-body .report-page .stat-box,
+.admin-body .appointment-page .filter-card,
+.admin-body .med-page .filter-card,
+.admin-body .report-page .filter-card,
+.admin-body .appointment-page .table-card,
+.admin-body .med-page .table-card,
+.admin-body .report-page .table-card,
+.admin-body .med-show-page .card {
+    border: 1px solid var(--admin-border) !important;
+    border-radius: var(--admin-card-radius) !important;
+    background: var(--admin-white) !important;
+    box-shadow: var(--admin-shadow) !important;
+}
+
+.admin-body .appointment-page .stat-card,
+.admin-body .med-page .stat-card,
+.admin-body .report-page .summary-card,
+.admin-body .report-page .summary-box,
+.admin-body .report-page .box,
+.admin-body .report-page .stat-box {
+    min-height: 0;
+    padding: 20px;
+}
+
+.admin-body .appointment-page .stat-card,
+.admin-body .med-page .stat-card {
+    border-left: 0 !important;
+}
+
+.admin-body .appointment-page .stat-card .icon,
+.admin-body .med-page .stat-icon,
+.admin-body .report-page .summary-icon,
+.admin-body .report-page .summary-box i,
+.admin-body .report-page .report-link-icon {
+    background: var(--admin-primary-light) !important;
+    color: var(--admin-primary-dark) !important;
+}
+
+.admin-body .appointment-page .stat-card h3,
+.admin-body .med-page .stat-card h3,
+.admin-body .report-page .summary-card h3,
+.admin-body .report-page .summary-box strong,
+.admin-body .report-page .box strong,
+.admin-body .report-page .stat-box strong {
+    color: var(--admin-heading) !important;
+}
+
+.admin-body .appointment-page .filter-form,
+.admin-body .med-page .filter-form,
+.admin-body .report-page .filters,
+.admin-body .report-page .filter-grid {
+    gap: 16px;
+}
+
+.admin-body .appointment-page .filter-card input,
+.admin-body .appointment-page .filter-card select,
+.admin-body .med-page .filter-card input,
+.admin-body .med-page .filter-card select,
+.admin-body .report-page .filter-card input,
+.admin-body .report-page .filter-card select {
+    min-height: 42px;
+    border: 1px solid var(--admin-border) !important;
+    border-radius: var(--admin-radius) !important;
+    color: var(--admin-heading);
+    background: #fff;
+}
+
+.admin-body .appointment-page .filter-card input:focus,
+.admin-body .appointment-page .filter-card select:focus,
+.admin-body .med-page .filter-card input:focus,
+.admin-body .med-page .filter-card select:focus,
+.admin-body .report-page .filter-card input:focus,
+.admin-body .report-page .filter-card select:focus {
+    border-color: var(--admin-primary) !important;
+    box-shadow: 0 0 0 3px rgba(255, 156, 169, .14);
+    outline: none;
+}
+
+.admin-body .appointment-page table th,
+.admin-body .med-page table th,
+.admin-body .report-page table th {
+    background: var(--admin-primary-light) !important;
+    color: var(--admin-heading) !important;
+    border-bottom: 1px solid var(--admin-border);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.admin-body .appointment-page table td,
+.admin-body .med-page table td,
+.admin-body .report-page table td {
+    border-bottom-color: var(--admin-border);
+    color: var(--admin-text);
+}
+
+.admin-body .appointment-page table tbody tr:hover,
+.admin-body .med-page table tbody tr:hover,
+.admin-body .report-page table tbody tr:hover {
+    background: #FFF9FA !important;
+}
+
+.admin-body .report-page .report-link,
+.admin-body .report-page .view-btn,
+.admin-body .report-page .filter-btn,
+.admin-body .report-page .actions a,
+.admin-body .report-page .actions button,
+.admin-body .med-page .btn-filter,
+.admin-body .appointment-page .btn-filter,
+.admin-body .appointment-page .btn-reset,
+.admin-body .med-page .btn-add {
+    min-height: var(--admin-control-height);
+    border-radius: var(--admin-radius) !important;
+}
+
+.admin-body .report-page .filter-btn,
+.admin-body .report-page .actions button,
+.admin-body .med-page .btn-filter,
+.admin-body .appointment-page .btn-filter {
+    background: var(--admin-primary) !important;
+    border: 1px solid var(--admin-primary) !important;
+    color: #fff !important;
+}
+
+.admin-body .report-page .actions a,
+.admin-body .appointment-page .btn-reset,
+.admin-body .report-page .clear-btn {
+    background: #fff !important;
+    border: 1px solid var(--admin-border) !important;
+    color: var(--admin-heading) !important;
+}
+
+.admin-body .med-show-page .medicine-header-card,
+.admin-body .med-show-page .medicine-preview {
+    border-radius: var(--admin-card-radius) !important;
+}
+
+@media (max-width: 768px) {
+    .admin-body .form-card .form-grid,
+    .admin-body .content-card .form-grid,
+    .admin-body .form-section .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-body .form-card .full,
+    .admin-body .form-card .full-width,
+    .admin-body .content-card .full,
+    .admin-body .content-card .full-width,
+    .admin-body .form-section .full,
+    .admin-body .form-section .full-width {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-body .page-header,
+    .admin-body .dashboard-heading,
+    .admin-body .med-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-body .page-header .btn,
+    .admin-body .page-header .btn-add,
+    .admin-body .dashboard-heading .btn,
+    .admin-body .med-header .btn-add {
+        width: 100%;
+    }
+}

@@ -135,7 +135,19 @@ class AdminController extends Controller
 
     public function eldersCreate()
     {
-        return view('admin.elders.create');
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('admin.elders.create', compact('menus', 'userRole'));
     }
 
     public function eldersStore(Request $request)
