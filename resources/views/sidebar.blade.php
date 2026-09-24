@@ -21,6 +21,7 @@
         'manager'    => ['Manager Panel',    'fa-user-tie'],
         'caregiver'  => ['Caregiver Panel',  'fa-user-nurse'],
         'healthcare' => ['Healthcare Panel', 'fa-user-doctor'],
+        'owner'      => ['Owner Portal',     'fa-user-shield'], 
     ];
 
     [$roleLabel, $roleIcon] = $roleLabels[$currentRole]
