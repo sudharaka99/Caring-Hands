@@ -170,3 +170,27 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('/medications/{id}',[AdminController::class, 'medicationUpdate'])->name('medication.update');
     Route::delete('/medications/{id}',[AdminController::class, 'medicationDestroy'])->name('medication.destroy');
 });
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    // Appointments
+    Route::get('/appointments',[AdminController::class, 'appointmentsIndex'])->name('appointments.index');
+    Route::get('/appointments/create',[AdminController::class, 'appointmentsCreate'])->name('appointments.create');
+    Route::post('/appointments',[AdminController::class, 'appointmentsStore'])->name('appointments.store');
+    Route::get('/appointments/{id}',[AdminController::class, 'appointmentsShow'])->name('appointments.show');
+    Route::get('/appointments/{id}/edit',[AdminController::class, 'appointmentsEdit'])->name('appointments.edit');
+    Route::put('/appointments/{id}',[AdminController::class, 'appointmentsUpdate'])->name('appointments.update');
+    Route::delete('/appointments/{id}',[AdminController::class, 'appointmentsDestroy'])->name('appointments.destroy');
+});
+
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    // Reports
+    Route::get('/reports', [AdminController::class, 'reportsIndex'])->name('reports.index');
+    Route::get('/reports/elders', [AdminController::class, 'reportsElders'])->name('reports.elders');
+    Route::get('/reports/staff', [AdminController::class, 'reportsStaff'])->name('reports.staff');
+    Route::get('/reports/attendance', [AdminController::class, 'reportsAttendance'])->name('reports.attendance');
+    Route::get('/reports/care-plans', [AdminController::class, 'reportsCarePlans'])->name('reports.care-plans');
+    Route::get('/reports/medication', [AdminController::class, 'reportsMedication'])->name('reports.medication');
+    Route::get('/reports/appointments', [AdminController::class, 'reportsAppointments'])->name('reports.appointments');
+
+});

@@ -278,4 +278,8 @@ class Elder extends Model
         return $this->hasMany(MedicationLog::class, 'elder_id');
     }
     
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class, 'elder_id');
+    }
 }

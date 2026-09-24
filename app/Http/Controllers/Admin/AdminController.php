@@ -19,6 +19,7 @@ use App\Models\Attendance;
 use App\Models\CarePlan;
 use App\Models\Medication;
 use App\Models\MedicationLog;
+use App\Models\Appointment;
 use Illuminate\Support\Facades\Hash;
 
 
@@ -3681,6 +3682,838 @@ class AdminController extends Controller
         return redirect()
             ->route('admin.medication.index')
             ->with('success', 'Medication deleted successfully.');
+    }
+
+    //==========================================
+    // APPOINTMENT MANAGEMENT
+    //==========================================
+
+    public function appointmentsIndex(Request $request)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        $query = Appointment::with('elder');
+
+        if ($request->filled('search')) {
+
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+
+                $q->where('title', 'like', "%{$search}%")
+                ->orWhere('doctor_name', 'like', "%{$search}%")
+                ->orWhere('hospital_name', 'like', "%{$search}%")
+                ->orWhere('location', 'like', "%{$search}%")
+
+                ->orWhereHas('elder', function ($elderQuery) use ($search) {
+
+                    $elderQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('elder_code', 'like', "%{$search}%")
+                        ->orWhere('nic', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('appointment_type')) {
+            $query->where('appointment_type', $request->appointment_type);
+        }
+
+        if ($request->filled('appointment_date')) {
+            $query->whereDate(
+                'appointment_date',
+                $request->appointment_date
+            );
+        }
+
+        $appointments = $query
+            ->orderBy('appointment_date')
+            ->orderBy('appointment_time')
+            ->paginate(10)
+            ->withQueryString();
+
+        $totalAppointments = Appointment::count();
+
+        $scheduledAppointments = Appointment::where('status', 'scheduled')
+            ->count();
+
+        $confirmedAppointments = Appointment::where('status', 'confirmed')
+            ->count();
+
+        $completedAppointments = Appointment::where('status', 'completed')
+            ->count();
+
+        $cancelledAppointments = Appointment::where('status', 'cancelled')
+            ->count();
+
+        return view('admin.appointments.index', compact(
+            'menus',
+            'appointments',
+            'totalAppointments',
+            'scheduledAppointments',
+            'confirmedAppointments',
+            'completedAppointments',
+            'cancelledAppointments'
+        ));
+    }
+
+    public function appointmentsCreate()
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        $elders = Elder::where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.appointments.create', compact(
+            'menus',
+            'elders'
+        ));
+    }
+
+    public function appointmentsStore(Request $request)
+    {
+        $validated = $request->validate([
+            'elder_id' => 'required|exists:elders,id',
+
+            'appointment_type' => [
+                'required',
+                'in:doctor,healthcare,hospital,clinic,therapy,checkup,other'
+            ],
+
+            'title' => 'required|string|max:255',
+
+            'doctor_name' => 'nullable|string|max:255',
+
+            'hospital_name' => 'nullable|string|max:255',
+
+            'location' => 'nullable|string|max:255',
+
+            'appointment_date' => 'required|date',
+
+            'appointment_time' => 'required|date_format:H:i',
+
+            'duration_minutes' => 'nullable|integer|min:1|max:1440',
+
+            'reason' => 'nullable|string',
+
+            'instructions' => 'nullable|string',
+
+            'status' => [
+                'required',
+                'in:scheduled,confirmed,completed,cancelled,rescheduled,missed'
+            ],
+
+            'notes' => 'nullable|string',
+        ]);
+
+        Appointment::create($validated);
+
+        return redirect()
+            ->route('admin.appointments.index')
+            ->with('success', 'Appointment created successfully.');
+    }
+
+    public function appointmentsEdit($id)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        $appointment = Appointment::findOrFail($id);
+
+        $elders = Elder::where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.appointments.edit', compact(
+            'menus',
+            'appointment',
+            'elders'
+        ));
+    }
+
+
+    public function appointmentsUpdate(Request $request, $id)
+    {
+        $appointment = Appointment::findOrFail($id);
+
+        $validated = $request->validate([
+            'elder_id' => 'required|exists:elders,id',
+
+            'appointment_type' => [
+                'required',
+                'in:doctor,healthcare,hospital,clinic,therapy,checkup,other'
+            ],
+
+            'title' => 'required|string|max:255',
+
+            'doctor_name' => 'nullable|string|max:255',
+
+            'hospital_name' => 'nullable|string|max:255',
+
+            'location' => 'nullable|string|max:255',
+
+            'appointment_date' => 'required|date',
+
+            'appointment_time' => 'required|date_format:H:i',
+
+            'duration_minutes' => 'nullable|integer|min:1|max:1440',
+
+            'reason' => 'nullable|string',
+
+            'instructions' => 'nullable|string',
+
+            'status' => [
+                'required',
+                'in:scheduled,confirmed,completed,cancelled,rescheduled,missed'
+            ],
+
+            'notes' => 'nullable|string',
+        ]);
+
+        $appointment->update($validated);
+
+        return redirect()
+            ->route('admin.appointments.index')
+            ->with('success', 'Appointment updated successfully.');
+    }
+
+    public function appointmentsDestroy($id)
+    {
+        $appointment = Appointment::findOrFail($id);
+
+        $appointment->delete();
+
+        return redirect()
+            ->route('admin.appointments.index')
+            ->with('success', 'Appointment deleted successfully.');
+    }
+
+
+    // ============================================================
+    // REPORTS DASHBOARD
+    // ============================================================
+
+    public function reportsIndex(Request $request)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        // --------------------------------------------------------
+        // Main counts
+        // --------------------------------------------------------
+
+        $totalElders = Elder::count();
+
+        $activeElders = Elder::where('status', 'active')->count();
+
+        $totalCaregivers = Caregiver::count();
+
+        $totalHealthcare = DB::table('healthcare')->count();
+
+        $totalManagers = DB::table('manager')->count();
+
+        $totalAppointments = Appointment::count();
+
+        $totalMedications = Medication::count();
+
+        $totalCarePlans = CarePlan::count();
+
+        // --------------------------------------------------------
+        // Attendance
+        // --------------------------------------------------------
+
+        $attendancePresent = Attendance::where('status', 'present')->count();
+
+        $attendanceLate = Attendance::where('status', 'late')->count();
+
+        $attendanceAbsent = Attendance::where('status', 'absent')->count();
+
+        $attendanceLeave = Attendance::where('status', 'leave')->count();
+
+        // --------------------------------------------------------
+        // Appointment statistics
+        // --------------------------------------------------------
+
+        $scheduledAppointments = Appointment::where('status', 'scheduled')->count();
+
+        $confirmedAppointments = Appointment::where('status', 'confirmed')->count();
+
+        $completedAppointments = Appointment::where('status', 'completed')->count();
+
+        $cancelledAppointments = Appointment::where('status', 'cancelled')->count();
+
+        $missedAppointments = Appointment::where('status', 'missed')->count();
+
+        // --------------------------------------------------------
+        // Care plan statistics
+        // --------------------------------------------------------
+
+        $activeCarePlans = CarePlan::where('status', 'active')->count();
+
+        $draftCarePlans = CarePlan::where('status', 'draft')->count();
+
+        $completedCarePlans = CarePlan::where('status', 'completed')->count();
+
+        $highPriorityCarePlans = CarePlan::whereIn('priority', [
+            'high',
+            'critical'
+        ])->count();
+
+        // --------------------------------------------------------
+        // Medication statistics
+        // --------------------------------------------------------
+
+        $activeMedications = Medication::where('status', 'active')->count();
+
+        $completedMedications = Medication::where('status', 'completed')->count();
+
+        $stoppedMedications = Medication::where('status', 'stopped')->count();
+
+        // --------------------------------------------------------
+        // Recent appointments
+        // --------------------------------------------------------
+
+        $recentAppointments = Appointment::with('elder')
+            ->orderByDesc('appointment_date')
+            ->orderByDesc('appointment_time')
+            ->limit(5)
+            ->get();
+
+        // --------------------------------------------------------
+        // Recent elders
+        // --------------------------------------------------------
+
+        $recentElders = Elder::orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        // --------------------------------------------------------
+        // Elder gender
+        // --------------------------------------------------------
+
+        $maleElders = Elder::where('gender', 'male')->count();
+
+        $femaleElders = Elder::where('gender', 'female')->count();
+
+        $otherElders = Elder::where('gender', 'other')->count();
+
+        return view('admin.reports.index', compact(
+            'menus',
+
+            'totalElders',
+            'activeElders',
+            'totalCaregivers',
+            'totalHealthcare',
+            'totalManagers',
+            'totalAppointments',
+            'totalMedications',
+            'totalCarePlans',
+
+            'attendancePresent',
+            'attendanceLate',
+            'attendanceAbsent',
+            'attendanceLeave',
+
+            'scheduledAppointments',
+            'confirmedAppointments',
+            'completedAppointments',
+            'cancelledAppointments',
+            'missedAppointments',
+
+            'activeCarePlans',
+            'draftCarePlans',
+            'completedCarePlans',
+            'highPriorityCarePlans',
+
+            'activeMedications',
+            'completedMedications',
+            'stoppedMedications',
+
+            'recentAppointments',
+            'recentElders',
+
+            'maleElders',
+            'femaleElders',
+            'otherElders'
+        ));
+    }
+
+    // ============================================================
+    // ELDER REPORT
+    // ============================================================
+
+    public function reportsElders(Request $request)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        $query = Elder::query();
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('elder_code', 'like', "%{$search}%")
+                ->orWhere('nic', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        // Status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Gender
+        if ($request->filled('gender')) {
+            $query->where('gender', $request->gender);
+        }
+
+        // Date range
+        if ($request->filled('from_date')) {
+            $query->whereDate(
+                'admission_date',
+                '>=',
+                $request->from_date
+            );
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate(
+                'admission_date',
+                '<=',
+                $request->to_date
+            );
+        }
+
+        $elders = $query
+            ->orderBy('name')
+            ->paginate(15)
+            ->withQueryString();
+
+        // Summary
+        $total = Elder::count();
+
+        $active = Elder::where('status', 'active')->count();
+
+        $inactive = Elder::where('status', 'inactive')->count();
+
+        $male = Elder::where('gender', 'male')->count();
+
+        $female = Elder::where('gender', 'female')->count();
+
+        $other = Elder::where('gender', 'other')->count();
+
+        return view('admin.reports.elders', compact(
+            'menus',
+            'elders',
+            'total',
+            'active',
+            'inactive',
+            'male',
+            'female',
+            'other'
+        ));
+    }
+
+    // ============================================================
+    // ATTENDANCE REPORT
+    // ============================================================
+
+    public function reportsAttendance(Request $request)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        $query = Attendance::with('user');
+
+        if ($request->filled('from_date')) {
+            $query->whereDate(
+                'attendance_date',
+                '>=',
+                $request->from_date
+            );
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate(
+                'attendance_date',
+                '<=',
+                $request->to_date
+            );
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        $attendance = $query
+            ->orderByDesc('attendance_date')
+            ->orderByDesc('check_in')
+            ->paginate(20)
+            ->withQueryString();
+
+        $users = DB::table('users')
+            ->whereIn('role', [
+                'caregiver',
+                'healthcare',
+                'manager'
+            ])
+            ->orderBy('name')
+            ->get();
+
+        $present = Attendance::where('status', 'present')->count();
+
+        $late = Attendance::where('status', 'late')->count();
+
+        $absent = Attendance::where('status', 'absent')->count();
+
+        $leave = Attendance::where('status', 'leave')->count();
+
+        $halfDay = Attendance::where('status', 'half_day')->count();
+
+        return view('admin.reports.attendance', compact(
+            'menus',
+            'attendance',
+            'users',
+            'present',
+            'late',
+            'absent',
+            'leave',
+            'halfDay'
+        ));
+    }
+
+    // ============================================================
+    // CARE PLAN REPORT
+    // ============================================================
+
+    public function reportsCarePlans(Request $request)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        $query = CarePlan::with([
+            'elder',
+            'caregiver.user'
+        ]);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate(
+                'start_date',
+                '>=',
+                $request->from_date
+            );
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate(
+                'start_date',
+                '<=',
+                $request->to_date
+            );
+        }
+
+        $carePlans = $query
+            ->orderByDesc('start_date')
+            ->paginate(15)
+            ->withQueryString();
+
+        $total = CarePlan::count();
+
+        $draft = CarePlan::where('status', 'draft')->count();
+
+        $active = CarePlan::where('status', 'active')->count();
+
+        $completed = CarePlan::where('status', 'completed')->count();
+
+        $cancelled = CarePlan::where('status', 'cancelled')->count();
+
+        $critical = CarePlan::where('priority', 'critical')->count();
+
+        $high = CarePlan::where('priority', 'high')->count();
+
+        return view('admin.reports.care-plans', compact(
+            'menus',
+            'carePlans',
+            'total',
+            'draft',
+            'active',
+            'completed',
+            'cancelled',
+            'critical',
+            'high'
+        ));
+    }
+
+    // ============================================================
+    // MEDICATION REPORT
+    // ============================================================
+
+    public function reportsMedication(Request $request)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->orderBy('sort_order')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->get();
+
+        $query = Medication::with('elder');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('medication_name', 'like', "%{$search}%")
+                ->orWhere('generic_name', 'like', "%{$search}%")
+                ->orWhere('prescribed_by', 'like', "%{$search}%")
+                ->orWhereHas('elder', function ($elderQuery) use ($search) {
+                    $elderQuery
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('elder_code', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('route')) {
+            $query->where('route', $request->route);
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate(
+                'start_date',
+                '>=',
+                $request->from_date
+            );
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate(
+                'start_date',
+                '<=',
+                $request->to_date
+            );
+        }
+
+        $medications = $query
+            ->orderByDesc('start_date')
+            ->paginate(15)
+            ->withQueryString();
+
+        $total = Medication::count();
+
+        $active = Medication::where('status', 'active')->count();
+
+        $completed = Medication::where('status', 'completed')->count();
+
+        $stopped = Medication::where('status', 'stopped')->count();
+
+        $cancelled = Medication::where('status', 'cancelled')->count();
+
+        $given = MedicationLog::where('status', 'given')->count();
+
+        $missed = MedicationLog::where('status', 'missed')->count();
+
+        $pending = MedicationLog::where('status', 'pending')->count();
+
+        return view('admin.reports.medication', compact(
+            'menus',
+            'medications',
+            'total',
+            'active',
+            'completed',
+            'stopped',
+            'cancelled',
+            'given',
+            'missed',
+            'pending'
+        ));
+    }
+
+    // ============================================================
+    // APPOINTMENT REPORT
+    // ============================================================
+
+    public function reportsAppointments(Request $request)
+    {
+        $userRole = auth()->user()->role ?? 'guest';
+
+        $menus = Menu::with(['children.accesses', 'accesses'])
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->whereHas('accesses', function ($query) use ($userRole) {
+                $query->where('role', $userRole)
+                    ->where('can_view', 1);
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        $query = Appointment::with('elder');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                ->orWhere('doctor_name', 'like', "%{$search}%")
+                ->orWhere('hospital_name', 'like', "%{$search}%")
+                ->orWhere('location', 'like', "%{$search}%")
+                ->orWhereHas('elder', function ($elderQuery) use ($search) {
+                    $elderQuery
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('elder_code', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('appointment_type')) {
+            $query->where(
+                'appointment_type',
+                $request->appointment_type
+            );
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate(
+                'appointment_date',
+                '>=',
+                $request->from_date
+            );
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate(
+                'appointment_date',
+                '<=',
+                $request->to_date
+            );
+        }
+
+        $appointments = $query
+            ->orderByDesc('appointment_date')
+            ->orderByDesc('appointment_time')
+            ->paginate(15)
+            ->withQueryString();
+
+        $total = Appointment::count();
+
+        $scheduled = Appointment::where('status', 'scheduled')->count();
+
+        $confirmed = Appointment::where('status', 'confirmed')->count();
+
+        $completed = Appointment::where('status', 'completed')->count();
+
+        $cancelled = Appointment::where('status', 'cancelled')->count();
+
+        $missed = Appointment::where('status', 'missed')->count();
+
+        return view('admin.reports.appointments', compact(
+            'menus',
+            'appointments',
+            'total',
+            'scheduled',
+            'confirmed',
+            'completed',
+            'cancelled',
+            'missed'
+        ));
     }
 
 }
