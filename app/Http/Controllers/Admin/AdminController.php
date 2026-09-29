@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
+use App\Rules\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -160,11 +161,11 @@ class AdminController extends Controller
             'age' => 'nullable|integer|min:0|max:150',
             'gender' => 'required|in:male,female,other',
             'blood_group' => 'nullable|string|max:5',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'max:20', new PhoneNumber()],
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'emergency_contact_name' => 'nullable|string|max:255',
-            'emergency_contact_phone' => 'nullable|string|max:20',
+            'emergency_contact_phone' => ['nullable', 'string', 'max:20', new PhoneNumber()],
             'emergency_contact_relationship' => 'nullable|string|max:100',
             'room' => 'required|string|max:50',
             'caregiver' => 'nullable|string|max:255',
@@ -239,11 +240,11 @@ class AdminController extends Controller
             'age' => 'nullable|integer|min:0|max:150',
             'gender' => 'required|in:male,female,other',
             'blood_group' => 'nullable|string|max:5',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'max:20', new PhoneNumber()],
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'emergency_contact_name' => 'nullable|string|max:255',
-            'emergency_contact_phone' => 'nullable|string|max:20',
+            'emergency_contact_phone' => ['nullable', 'string', 'max:20', new PhoneNumber()],
             'emergency_contact_relationship' => 'nullable|string|max:100',
             'room' => 'required|string|max:50',
             'caregiver' => 'nullable|string|max:255',
@@ -516,7 +517,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'nic' => 'nullable|string|max:50|unique:owners,nic',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'max:20', new PhoneNumber()],
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'relationship' => 'nullable|string|max:100',
@@ -645,7 +646,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'nic' => 'nullable|string|max:50|unique:owners,nic,' . $id,
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'max:20', new PhoneNumber()],
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'relationship' => 'nullable|string|max:100',
@@ -927,7 +928,7 @@ class AdminController extends Controller
             'nic' => 'nullable|string|max:20',
             'date_of_birth' => 'nullable|date',
             'gender' => 'nullable|in:male,female,other',
-            'phone' => 'nullable|string|max:30',
+            'phone' => ['nullable', 'string', 'max:30', new PhoneNumber()],
             'address' => 'nullable|string',
             'joining_date' => 'nullable|date',
 
@@ -936,7 +937,7 @@ class AdminController extends Controller
 
             'emergency_contact_name' => 'nullable|string|max:255',
             'emergency_relationship' => 'nullable|string|max:100',
-            'emergency_phone' => 'nullable|string|max:30',
+            'emergency_phone' => ['nullable', 'string', 'max:30', new PhoneNumber()],
 
             'qualifications' => 'nullable|string',
             'experience' => 'nullable|string',
@@ -1118,7 +1119,7 @@ class AdminController extends Controller
 
             'gender' => 'nullable|in:male,female,other',
 
-            'phone' => 'nullable|string|max:30',
+            'phone' => ['nullable', 'string', 'max:30', new PhoneNumber()],
 
             'address' => 'nullable|string',
 
@@ -1134,7 +1135,7 @@ class AdminController extends Controller
                 'nullable|string|max:100',
 
             'emergency_phone' =>
-                'nullable|string|max:30',
+                ['nullable', 'string', 'max:30', new PhoneNumber()],
 
             'qualifications' => 'nullable|string',
 
@@ -1392,7 +1393,7 @@ class AdminController extends Controller
 
             'gender' => 'nullable|in:male,female,other',
 
-            'phone' => 'nullable|string|max:30',
+            'phone' => ['nullable', 'string', 'max:30', new PhoneNumber()],
 
             'address' => 'nullable|string',
 
@@ -1417,7 +1418,7 @@ class AdminController extends Controller
                 'nullable|string|max:100',
 
             'emergency_phone' =>
-                'nullable|string|max:30',
+                ['nullable', 'string', 'max:30', new PhoneNumber()],
 
             'notes' =>
                 'nullable|string',
@@ -1557,7 +1558,7 @@ class AdminController extends Controller
 
             'gender' => 'nullable|in:male,female,other',
 
-            'phone' => 'nullable|string|max:30',
+            'phone' => ['nullable', 'string', 'max:30', new PhoneNumber()],
 
             'address' => 'nullable|string',
 
@@ -1582,7 +1583,7 @@ class AdminController extends Controller
                 'nullable|string|max:100',
 
             'emergency_phone' =>
-                'nullable|string|max:30',
+                ['nullable', 'string', 'max:30', new PhoneNumber()],
 
             'notes' =>
                 'nullable|string',
@@ -1805,8 +1806,11 @@ class AdminController extends Controller
             'status' => 'required|in:active,inactive',
             'staff_code' => 'nullable|string|max:50',
             'nic' => 'nullable|string|max:20',
-            'phone' => 'nullable|string|max:30',
+            'phone' => ['nullable', 'string', 'max:20', new PhoneNumber()],
             'address' => 'nullable|string',
+            'emergency_contact_name' => 'nullable|string|max:255',
+            'emergency_relationship' => 'nullable|string|max:100',
+            'emergency_phone' => ['nullable', 'string', 'max:20', new PhoneNumber()],
         ]);
 
         DB::transaction(function () use ($request) {
@@ -1826,6 +1830,9 @@ class AdminController extends Controller
                 'nic' => $request->nic,
                 'phone' => $request->phone,
                 'address' => $request->address,
+                'emergency_contact_name' => $request->emergency_contact_name,
+                'emergency_relationship' => $request->emergency_relationship,
+                'emergency_phone' => $request->emergency_phone,
             ]);
         });
 
@@ -1889,8 +1896,11 @@ class AdminController extends Controller
             'status' => 'required|in:active,inactive',
             'staff_code' => 'nullable|string|max:50',
             'nic' => 'nullable|string|max:20',
-            'phone' => 'nullable|string|max:30',
+            'phone' => ['nullable', 'string', 'max:20', new PhoneNumber()],
             'address' => 'nullable|string',
+            'emergency_contact_name' => 'nullable|string|max:255',
+            'emergency_relationship' => 'nullable|string|max:100',
+            'emergency_phone' => ['nullable', 'string', 'max:20', new PhoneNumber()],
         ]);
 
         DB::transaction(function () use ($request, $manager) {
@@ -1911,6 +1921,9 @@ class AdminController extends Controller
             $manager->nic = $request->nic;
             $manager->phone = $request->phone;
             $manager->address = $request->address;
+            $manager->emergency_contact_name = $request->emergency_contact_name;
+            $manager->emergency_relationship = $request->emergency_relationship;
+            $manager->emergency_phone = $request->emergency_phone;
             $manager->save();
         });
 

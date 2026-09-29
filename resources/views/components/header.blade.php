@@ -60,14 +60,40 @@
                     </a>
                 </li>
 
+                <li class="nav-menu-actions">
+                    <div class="nav-buttons">
+                        @auth
+                            @php
+                                $dashboardRoute = match (auth()->user()->role) {
+                                    'admin'      => 'admin.dashboard',
+                                    'manager'    => 'manager.dashboard',
+                                    'caregiver'  => 'caregiver.dashboard',
+                                    'healthcare' => 'healthcare.dashboard',
+                                    default      => 'home',
+                                };
+                            @endphp
+
+                            <a href="{{ route($dashboardRoute) }}" class="btn btn-primary">
+                                <i class="fa-solid fa-gauge-high"></i>
+                                Dashboard
+                            </a>
+                        @else
+                            <a href="{{ route('login') }}" class="btn btn-outline">
+                                <i class="fa-regular fa-user"></i>
+                                Login
+                            </a>
+
+                            <a href="{{ route('register') }}" class="btn btn-primary">
+                                Get Started
+                            </a>
+                        @endauth
+                    </div>
+                </li>
+
             </ul>
 
-
-            <!-- Right Buttons -->
-            <div class="nav-buttons">
-
+            <div class="nav-buttons nav-buttons-desktop">
                 @auth
-
                     @php
                         $dashboardRoute = match (auth()->user()->role) {
                             'admin'      => 'admin.dashboard',
@@ -78,39 +104,21 @@
                         };
                     @endphp
 
-
-                    <a href="{{ route($dashboardRoute) }}"
-                       class="btn btn-primary">
-
+                    <a href="{{ route($dashboardRoute) }}" class="btn btn-primary">
                         <i class="fa-solid fa-gauge-high"></i>
-
                         Dashboard
-
                     </a>
-
                 @else
-
-                    <a href="{{ route('login') }}"
-                       class="btn btn-outline">
-
+                    <a href="{{ route('login') }}" class="btn btn-outline">
                         <i class="fa-regular fa-user"></i>
-
                         Login
-
                     </a>
 
-
-                    <a href="{{ route('register') }}"
-                       class="btn btn-primary">
-
+                    <a href="{{ route('register') }}" class="btn btn-primary">
                         Get Started
-
                     </a>
-
                 @endauth
-
             </div>
-
 
             <!-- Mobile Menu -->
             <button

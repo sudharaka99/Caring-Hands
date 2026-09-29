@@ -137,6 +137,30 @@
     </script>
 
 
+    <script>
+        document.addEventListener('input', function (event) {
+            const input = event.target;
+
+            if (!(input instanceof HTMLInputElement) || input.type !== 'tel') {
+                return;
+            }
+
+            const cursorPosition = input.selectionStart ?? input.value.length;
+            const valueBeforeCursor = input.value.slice(0, cursorPosition);
+            const sanitize = value => value
+                .replace(/[^0-9+ ().-]/g, '')
+                .replace(/(?!^)\+/g, '');
+            const sanitizedValue = sanitize(input.value);
+
+            if (sanitizedValue !== input.value) {
+                input.value = sanitizedValue;
+                const nextCursorPosition = sanitize(valueBeforeCursor).length;
+                input.setSelectionRange(nextCursorPosition, nextCursorPosition);
+            }
+        });
+    </script>
+
+
     {{-- Page-specific scripts --}}
     @stack('scripts')
 

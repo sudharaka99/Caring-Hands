@@ -41,7 +41,10 @@
                 {{-- Phone --}}
                 <div class="form-group">
                     <label>Phone Number</label>
-                    <input type="text" name="phone" value="{{ old('phone') }}" placeholder="Enter phone number">
+                    <input type="tel" inputmode="tel" name="phone" value="{{ old('phone') }}" placeholder="Enter phone number" pattern="(?=(?:\D*\d){7,15}\D*$)\+?[0-9](?:[0-9]| |\.|\x28|\x29|\x2D)*[0-9]" title="Enter 7 to 15 digits; standard phone punctuation is allowed.">
+                    @error('phone')
+                        <small class="error-text">{{ $message }}</small>
+                    @enderror
                 </div>
 
                 {{-- Staff Code --}}
@@ -118,7 +121,10 @@
 
                 <div class="form-group">
                     <label>Emergency Phone</label>
-                    <input type="text" name="emergency_phone" value="{{ old('emergency_phone') }}" placeholder="Emergency phone number">
+                    <input type="tel" inputmode="tel" name="emergency_phone" value="{{ old('emergency_phone') }}" placeholder="Emergency phone number" pattern="(?=(?:\D*\d){7,15}\D*$)\+?[0-9](?:[0-9]| |\.|\x28|\x29|\x2D)*[0-9]" title="Enter 7 to 15 digits; standard phone punctuation is allowed.">
+                    @error('emergency_phone')
+                        <small class="error-text">{{ $message }}</small>
+                    @enderror
                 </div>
 
                 {{-- Password --}}

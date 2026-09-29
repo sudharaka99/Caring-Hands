@@ -296,13 +296,19 @@
                         <label>Phone</label>
 
                         <input
-                            type="text"
+                            type="tel"
+                            inputmode="tel"
+                            pattern="(?=(?:\D*\d){7,15}\D*$)\+?[0-9](?:[0-9]| |\.|\x28|\x29|\x2D)*[0-9]"
+                            title="Enter 7 to 15 digits; standard phone punctuation is allowed."
                             name="phone"
                             value="{{ old(
                                 'phone',
                                 $manager->phone
                             ) }}"
                         >
+                        @error('phone')
+                            <small class="error-text">{{ $message }}</small>
+                        @enderror
 
                     </div>
 
@@ -504,13 +510,19 @@
                         <label>Emergency Phone</label>
 
                         <input
-                            type="text"
+                            type="tel"
+                            inputmode="tel"
+                            pattern="(?=(?:\D*\d){7,15}\D*$)\+?[0-9](?:[0-9]| |\.|\x28|\x29|\x2D)*[0-9]"
+                            title="Enter 7 to 15 digits; standard phone punctuation is allowed."
                             name="emergency_phone"
                             value="{{ old(
                                 'emergency_phone',
                                 $manager->emergency_phone
                             ) }}"
                         >
+                        @error('emergency_phone')
+                            <small class="error-text">{{ $message }}</small>
+                        @enderror
 
                     </div>
 

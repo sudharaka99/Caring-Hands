@@ -258,6 +258,10 @@ header {
     padding: 0;
 }
 
+.nav-menu-actions {
+    display: none;
+}
+
 .nav-menu a {
     position: relative;
 
@@ -428,7 +432,6 @@ header {
 
 }
 
-
 /* ==========================================
    TABLET / MOBILE NAVIGATION
 ========================================== */
@@ -492,6 +495,9 @@ header {
         display: flex;
     }
 
+    .nav-buttons-desktop {
+        display: none;
+    }
 
     /* Mobile Menu Links */
 
@@ -523,10 +529,20 @@ header {
     }
 
 
-    /* Hide Desktop Buttons */
+    .nav-menu-actions {
+        display: block;
+        padding: 8px 15px 4px;
+    }
 
-    .nav-buttons {
-        display: none;
+    .nav-menu-actions .nav-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+    }
+
+    .nav-menu-actions .btn {
+        width: 100%;
+        min-height: 44px;
     }
 
 
@@ -537,7 +553,6 @@ header {
     }
 
 }
-
 
 /* ==========================================
    MOBILE
@@ -1465,4 +1480,51 @@ header {
         font-size: 26px;
     }
 
+}
+
+@media (max-width: 768px) {
+    img,
+    video,
+    iframe,
+    canvas {
+        max-width: 100%;
+    }
+
+    .container,
+    .section,
+    main {
+        min-width: 0;
+    }
+
+    .hero-wrapper,
+    .about-wrapper,
+    .contact-wrapper,
+    .services-grid,
+    .features-grid,
+    .stats-grid,
+    .footer-grid {
+        min-width: 0;
+    }
+
+    .form-control,
+    input,
+    select,
+    textarea {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 380px) {
+    .container {
+        width: calc(100% - 28px);
+    }
+
+    .hero-buttons .btn {
+        width: 100%;
+    }
+
+    .feature-card {
+        gap: 14px;
+        padding: 20px;
+    }
 }

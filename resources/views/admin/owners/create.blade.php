@@ -139,7 +139,9 @@
 
                     <label>Phone Number <span style="color:red;">*</span></label>
 
-                    <input type="text"
+                              <input type="tel" inputmode="tel"
+                                   pattern="(?=(?:\D*\d){7,15}\D*$)\+?[0-9](?:[0-9]| |\.|\x28|\x29|\x2D)*[0-9]"
+                                  title="Enter 7 to 15 digits; standard phone punctuation is allowed."
                            name="phone"
                            class="form-control @error('phone') is-invalid @enderror"
                            value="{{ old('phone') }}"

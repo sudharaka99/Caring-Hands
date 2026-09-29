@@ -4856,3 +4856,62 @@ body.role-healthcare .sidebar-role-badge:hover {
         width: 100%;
     }
 }
+
+@media (max-width: 768px) {
+    .admin-main,
+    .admin-content,
+    .admin-content > *,
+    .admin-content .row,
+    .admin-content [class*="col-"] {
+        min-width: 0;
+    }
+
+    .admin-content .table-responsive {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-content img,
+    .admin-content video,
+    .admin-content iframe,
+    .admin-content canvas {
+        max-width: 100%;
+    }
+
+    .admin-content input,
+    .admin-content select,
+    .admin-content textarea {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-topbar {
+        height: 64px;
+        min-height: 64px;
+        gap: 8px;
+        padding: 0 10px;
+    }
+
+    .topbar-left,
+    .topbar-right {
+        gap: 7px;
+    }
+
+    .topbar-user {
+        margin-left: 0;
+    }
+
+    .topbar-icon-btn,
+    .topbar-avatar,
+    .sidebar-toggle {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+    }
+
+    .admin-content {
+        padding: 16px 10px;
+    }
+}
