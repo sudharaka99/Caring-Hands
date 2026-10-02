@@ -7,7 +7,7 @@
     {{-- ==========================================
          PAGE HEADER
     =========================================== --}}
-    <section class="section" style="padding-top: 150px;">
+    <section class="section services-intro">
         <div class="container">
             <div class="section-title">
                 <span class="section-tag">Our Services</span>

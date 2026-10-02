@@ -98,28 +98,28 @@
                         class="hero-banner-image"
                     >
 
-
-                    <!-- Floating Card -->
-                    <div class="hero-floating-card">
-
-                        <div class="hero-floating-icon">
-
-                            <i class="fa-solid fa-heart"></i>
-
-                        </div>
+                </div>
 
 
-                        <div class="hero-floating-content">
+                <!-- Floating Card -->
+                <div class="hero-floating-card">
 
-                            <strong>
-                                Better Care Starts Here
-                            </strong>
+                    <div class="hero-floating-icon">
 
-                            <span>
-                                Compassionate care every day
-                            </span>
+                        <i class="fa-solid fa-heart"></i>
 
-                        </div>
+                    </div>
+
+
+                    <div class="hero-floating-content">
+
+                        <strong>
+                            Better Care Starts Here
+                        </strong>
+
+                        <span>
+                            Compassionate care every day
+                        </span>
 
                     </div>
 

@@ -770,9 +770,9 @@ header {
     }
 
     .hero-floating-card {
-        left: 15px;
-        right: 15px;
-        bottom: 15px;
+        position: static;
+        width: 100%;
+        margin-top: 14px;
         padding: 12px 15px;
     }
 
@@ -781,6 +781,34 @@ header {
         height: 42px;
     }
 
+}
+
+@media (max-width: 992px) {
+    .hero {
+        min-height: auto;
+        padding: 120px 0 60px;
+    }
+
+    .hero-wrapper {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 36px;
+    }
+
+    .hero-content,
+    .hero-visual {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 550px) {
+    .hero {
+        padding: 108px 0 48px;
+    }
+
+    .hero-wrapper {
+        gap: 28px;
+    }
 }
 
 /* ==========================================
@@ -1526,5 +1554,25 @@ header {
     .feature-card {
         gap: 14px;
         padding: 20px;
+    }
+}
+
+.services-intro {
+    padding-top: 150px;
+}
+
+@media (max-width: 768px) {
+    html {
+        overflow-x: clip;
+    }
+
+    .services-intro {
+        padding-top: 120px;
+    }
+}
+
+@media (max-width: 550px) {
+    .services-intro {
+        padding-top: 105px;
     }
 }
